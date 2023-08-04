@@ -20,7 +20,7 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 #### Duration predictor (fig 1a)
 - [x] Added LSTM discriminator to duration predictor in notebook.
 - [ ] Added adversarial loss to duration predictor
-- [ ] Monotonic Alignment Search with Gaussian Noise
+- [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification
 - [ ] Update models.py/train.py/losses.py
 #### Transformer block in the normalizing flow (fig 1b)
 - [x] Added transformer block to the normalizing flow in notebook.
