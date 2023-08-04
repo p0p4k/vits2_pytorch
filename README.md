@@ -13,17 +13,18 @@ Single-stage text-to-speech models have been actively studied recently, and thei
 ## Credits
 We will build this repo based on the [VITS repo](https://github.com/jaywalnut310/vits). Currently I am adding vits2 changes in the 'notebooks' folder.
 
-## Features
-#### Duration predictor (fig 1a)
-- [x] Added LSTM discriminator to duration predictor 
-- [ ] Added adversarial loss to duration predictor
-- [ ] Monotonic Alignment Search with Gaussian Noise
-#### Transformer block in the normalizing flow (fig 1b)
-- [x] Added transformer block to the normalizing flow
-- [x] Added layers and blocks in models.py (ResidualCouplingTransformersLayer, ResidualCouplingTransformersBlock)
-#### Speaker-conditioned text encoder (fig 1c)
-- [ ] Added speaker embedding to the text encoder
-
-
 ## Jupyter Notebook for initial experiments
 - [x] check the 'notebooks' folder
+
+## Features
+#### Duration predictor (fig 1a)
+- [x] Added LSTM discriminator to duration predictor in notebook.
+- [ ] Added adversarial loss to duration predictor
+- [ ] Monotonic Alignment Search with Gaussian Noise
+- [ ] Update models.py/train.py/losses.py
+#### Transformer block in the normalizing flow (fig 1b)
+- [x] Added transformer block to the normalizing flow in notebook.
+- [x] Added layers and blocks in models.py (ResidualCouplingTransformersLayer, ResidualCouplingTransformersBlock)
+#### Speaker-conditioned text encoder (fig 1c)
+- [x] Added speaker embedding to the text encoder in notebook.
+- [ ] Added speaker embedding to the text encoder in models.py (TextEncoder)
