@@ -28,3 +28,6 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 #### Speaker-conditioned text encoder (fig 1c)
 - [x] Added speaker embedding to the text encoder in notebook.
 - [x] Added speaker embedding to the text encoder in models.py (TextEncoder; backward compatible with VITS)
+
+### Special mentions
+@lexkoro for discussions and help with the code.

@@ -94,6 +94,25 @@ class StochasticDurationPredictor(nn.Module):
       logw = z0
       return logw
 
+class DurationDiscriminator(nn.Module):
+  def __init__(self, input_dim, hidden_dim, num_layers=2):
+    super(DurationDiscriminator, self).__init__()
+    self.input_dim = input_dim
+    self.hidden_dim = hidden_dim
+    self.num_layers = num_layers
+    self.lstm = nn.LSTM(input_size=input_dim, hidden_size=hidden_dim, num_layers=num_layers, batch_first=True)
+    self.output_layer = nn.Sequential(
+        nn.Linear(hidden_dim, 1), 
+        nn.Sigmoid() 
+    )
+
+  def forward(self, x, durs):
+    assert x.size(-1) + durs.size(-1) == self.input_dim, "Input dimensions mismatch for Duration Discriminator!"
+    combined_input = torch.cat((x, durs), dim=-1)
+    lstm_out, _ = self.lstm(combined_input)
+    last_output = lstm_out[:, -1, :]
+    discriminator_output = self.output_layer(last_output)
+    return discriminator_output
 
 class DurationPredictor(nn.Module):
   def __init__(self, in_channels, filter_channels, kernel_size, p_dropout, gin_channels=0):
