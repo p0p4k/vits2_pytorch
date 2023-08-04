@@ -141,7 +141,8 @@ class TextEncoder(nn.Module):
       n_heads,
       n_layers,
       kernel_size,
-      p_dropout):
+      p_dropout,
+      gin_channels=0):
     super().__init__()
     self.n_vocab = n_vocab
     self.out_channels = out_channels
@@ -161,7 +162,8 @@ class TextEncoder(nn.Module):
       n_heads,
       n_layers,
       kernel_size,
-      p_dropout)
+      p_dropout,
+      gin_channels=self.gin_channels)
     self.proj= nn.Conv1d(hidden_channels, out_channels * 2, 1)
 
   def forward(self, x, x_lengths):
@@ -551,7 +553,8 @@ class SynthesizerTrn(nn.Module):
         n_heads,
         n_layers,
         kernel_size,
-        p_dropout)
+        p_dropout,
+        gin_channels=self.gin_channels)
     self.dec = Generator(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels)
     self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)
     # self.flow = ResidualCouplingBlock(inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels)
