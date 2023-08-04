@@ -232,6 +232,7 @@ class ResidualCouplingTransformersLayer(nn.Module):
   def forward(self, x, x_mask, g=None, reverse=False):
       x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
       x0_ = self.pre_transformer(x0 * x_mask, x_mask) #vits2
+      x0_ = x0_ + x0 #vits2
       h = self.pre(x0_) * x_mask #changed from x0 to x0_ to retain x0 for the flow
       h = self.enc(h, x_mask, g=g)
       h = self.post_transformer(h, x_mask) #vits2
@@ -271,7 +272,7 @@ class ResidualCouplingTransformersBlock(nn.Module):
 
     self.flows = nn.ModuleList()
     for i in range(n_flows):
-      self.flows.append(modules.ResidualCouplingTransformersLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+      self.flows.append(ResidualCouplingTransformersLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
       self.flows.append(modules.Flip())
 
   def forward(self, x, x_mask, g=None, reverse=False):
