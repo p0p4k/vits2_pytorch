@@ -19,10 +19,11 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 - [ ] Added adversarial loss to duration predictor
 - [ ] Monotonic Alignment Search with Gaussian Noise
 #### Transformer block in the normalizing flow (fig 1b)
-- [ ] Added transformer block to the normalizing flow
+- [x] Added transformer block to the normalizing flow
+- [x] Added layers and blocks in models.py (ResidualCouplingTransformersLayer, ResidualCouplingTransformersBlock)
 #### Speaker-conditioned text encoder (fig 1c)
 - [ ] Added speaker embedding to the text encoder
 
 
-## Jupeyter Notebook for initial experiments
+## Jupyter Notebook for initial experiments
 - [x] check the 'notebooks' folder
