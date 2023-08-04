@@ -51,8 +51,8 @@ class Encoder(nn.Module): #backward compatible vits2 encoder
       if i == self.cond_layer_idx and g is not None:
         g = self.spk_emb_linear(g.transpose(1, 2))
         g = g.transpose(1, 2)
-        g = g * x_mask
         x = x + g
+        x = x * x_mask
       y = self.attn_layers[i](x, x, attn_mask)
       y = self.drop(y)
       x = self.norm_layers_1[i](x + y)
