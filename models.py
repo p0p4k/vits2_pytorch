@@ -171,7 +171,7 @@ class TextEncoder(nn.Module):
     self.n_layers = n_layers
     self.kernel_size = kernel_size
     self.p_dropout = p_dropout
-
+    self.gin_channels = gin_channels
     self.emb = nn.Embedding(n_vocab, hidden_channels)
     nn.init.normal_(self.emb.weight, 0.0, hidden_channels**-0.5)
 
@@ -225,6 +225,7 @@ class ResidualCouplingTransformersLayer(nn.Module):
           n_layers=2,
           kernel_size=3,
           p_dropout=0.1,
+          window_size=None
           )
       
       self.pre = nn.Conv1d(self.half_channels, hidden_channels, 1)
@@ -244,6 +245,7 @@ class ResidualCouplingTransformersLayer(nn.Module):
           n_layers=2,
           kernel_size=3,
           p_dropout=0.1,
+          window_size=None
           )
       
       self.post = nn.Conv1d(hidden_channels, self.half_channels * (2 - mean_only), 1)

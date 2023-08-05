@@ -29,6 +29,7 @@ class Encoder(nn.Module): #backward compatible vits2 encoder
     self.ffn_layers = nn.ModuleList()
     self.norm_layers_2 = nn.ModuleList()
     # if kwargs has spk_emb_dim, then add a linear layer to project spk_emb_dim to hidden_channels
+    self.cond_layer_idx = self.n_layers
     if 'gin_channels' in kwargs:
       self.gin_channels = kwargs['gin_channels']
       if self.gin_channels != 0:
