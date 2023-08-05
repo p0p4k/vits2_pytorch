@@ -20,7 +20,7 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 #### Duration predictor (fig 1a)
 - [x] Added LSTM discriminator to duration predictor in notebook.
 - [ ] Added adversarial loss to duration predictor
-- [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification
+- [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification (Section 2.2)
 - [ ] Update models.py/train.py/losses.py
 #### Transformer block in the normalizing flow (fig 1b)
 - [x] Added transformer block to the normalizing flow in notebook.
@@ -28,6 +28,12 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 #### Speaker-conditioned text encoder (fig 1c)
 - [x] Added speaker embedding to the text encoder in notebook.
 - [x] Added speaker embedding to the text encoder in models.py (TextEncoder; backward compatible with VITS)
+### Mel spectrogram posterior encoder (Section 3)
+- [x] Added mel spectrogram posterior encoder in notebook.
+- [x] Added mel spectrogram posterior encoder in train.py 
+- [x] Addded new config file (vits2_ljs_base.json; can be turned on using "use_mel_posterior_encoder" flag)
 
 ### Special mentions
-@lexkoro for discussions and help with the code.
+[@erogol](https://github.com/erogol) for quick feedback and guidance. (Please check his awesome [CoquiTTS](https://github.com/coqui-ai/TTS) repo)
+[@lexkoro](https://github.com/lexkoro) for discussions and help with the prototype training.
+[@manmay-nakhashi](https://github.com/manmay-nakhashi) for discussions and help with the code.

@@ -79,10 +79,17 @@ def run(rank, n_gpus, hps):
     eval_loader = DataLoader(eval_dataset, num_workers=8, shuffle=False,
         batch_size=hps.train.batch_size, pin_memory=True,
         drop_last=False, collate_fn=collate_fn)
+  
+  if "use_mel_posterior_encoder" in hps.model.keys() and hps.model.use_mel_posterior_encoder == True:
+    print("Using mel posterior encoder for VITS2")
+    posterior_channels = 80 #vits2
+  else:
+    print("Using lin posterior encoder for VITS1")
+    posterior_channels = hps.data.filter_length // 2 + 1  
 
   net_g = SynthesizerTrn(
       len(symbols),
-      hps.data.filter_length // 2 + 1,
+      posterior_channels,
       hps.train.segment_size // hps.data.hop_length,
       **hps.model).cuda(rank)
   net_d = MultiPeriodDiscriminator(hps.model.use_spectral_norm).cuda(rank)
