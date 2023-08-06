@@ -16,6 +16,13 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 
 ## How to run (dry-run)
 
+- build monotonic alignment 
+```sh
+# Cython-version Monotonoic Alignment Search
+cd monotonic_align
+python setup.py build_ext --inplace
+```
+- model forward pass (dry-run)
 ```python
 import torch
 from models import SynthesizerTrn
