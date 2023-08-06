@@ -87,10 +87,26 @@ def run(rank, n_gpus, hps):
     print("Using lin posterior encoder for VITS1")
     posterior_channels = hps.data.filter_length // 2 + 1  
 
+  if "use_transformer_flows" in hps.model.keys() and hps.model.use_transformer_flows == True:
+    print("Using transformer flows for VITS2")
+    use_transformer_flows = True
+  else:
+    print("Using normal flows for VITS1")
+    use_transformer_flows = False
+
+  if "use_spk_conditioned_encoder" in hps.model.keys() and hps.model.use_spk_conditioned_encoder == True:
+    print("Using speaker conditioned encoder for VITS2")
+    use_spk_conditioned_encoder = True
+  else:
+    print("Using normal encoder for VITS1")
+    use_spk_conditioned_encoder = False
+
   net_g = SynthesizerTrn(
       len(symbols),
       posterior_channels,
       hps.train.segment_size // hps.data.hop_length,
+      use_transformer_flows=use_transformer_flows,
+      use_spk_conditioned_encoder=use_spk_conditioned_encoder,
       **hps.model).cuda(rank)
   net_d = MultiPeriodDiscriminator(hps.model.use_spectral_norm).cuda(rank)
   optim_g = torch.optim.AdamW(

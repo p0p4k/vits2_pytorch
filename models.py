@@ -283,7 +283,9 @@ class ResidualCouplingTransformersBlock(nn.Module):
       dilation_rate,
       n_layers,
       n_flows=4,
-      gin_channels=0):
+      gin_channels=0,
+      use_transformer_flows=False,
+      ):
     super().__init__()
     self.channels = channels
     self.hidden_channels = hidden_channels
@@ -294,9 +296,14 @@ class ResidualCouplingTransformersBlock(nn.Module):
     self.gin_channels = gin_channels
 
     self.flows = nn.ModuleList()
-    for i in range(n_flows):
-      self.flows.append(ResidualCouplingTransformersLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
-      self.flows.append(modules.Flip())
+    if use_transformer_flows:
+      for i in range(n_flows):
+        self.flows.append(ResidualCouplingTransformersLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+        self.flows.append(modules.Flip())
+    else:
+      for i in range(n_flows):
+        self.flows.append(modules.ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+        self.flows.append(modules.Flip())
 
   def forward(self, x, x_mask, g=None, reverse=False):
     if not reverse:
@@ -564,9 +571,14 @@ class SynthesizerTrn(nn.Module):
     self.segment_size = segment_size
     self.n_speakers = n_speakers
     self.gin_channels = gin_channels
-
+    self.use_spk_conditioned_encoder = kwargs.get("use_spk_conditioned_encoder", False)
+    self.use_transformer_flows = kwargs.get("use_transformer_flows", False)
     self.use_sdp = use_sdp
 
+    if self.use_spk_conditioned_encoder and gin_channels > 0:
+       self.enc_gin_channels = gin_channels
+    else:
+        self.enc_gin_channels = 0
     self.enc_p = TextEncoder(n_vocab,
         inter_channels,
         hidden_channels,
@@ -575,11 +587,12 @@ class SynthesizerTrn(nn.Module):
         n_layers,
         kernel_size,
         p_dropout,
-        gin_channels=self.gin_channels)
+        gin_channels=self.enc_gin_channels)
+    
     self.dec = Generator(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels)
     self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)
     # self.flow = ResidualCouplingBlock(inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels)
-    self.flow = ResidualCouplingTransformersBlock(inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels)
+    self.flow = ResidualCouplingTransformersBlock(inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels, use_transformer_flows=self.use_transformer_flows)
 
     if use_sdp:
       self.dp = StochasticDurationPredictor(hidden_channels, 192, 3, 0.5, 4, gin_channels=gin_channels)
