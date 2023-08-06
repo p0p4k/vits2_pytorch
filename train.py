@@ -95,8 +95,10 @@ def run(rank, n_gpus, hps):
     use_transformer_flows = False
 
   if "use_spk_conditioned_encoder" in hps.model.keys() and hps.model.use_spk_conditioned_encoder == True:
-    print("Using speaker conditioned encoder for VITS2")
-    use_spk_conditioned_encoder = True
+    if hps.data.n_speakers == 0:
+      print("Warning: use_spk_conditioned_encoder is True but n_speakers is 0")
+    print("Setting use_spk_conditioned_encoder to False as model is a single speaker model")
+    use_spk_conditioned_encoder = False
   else:
     print("Using normal encoder for VITS1")
     use_spk_conditioned_encoder = False

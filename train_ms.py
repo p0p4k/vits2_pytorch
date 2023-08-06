@@ -79,12 +79,36 @@ def run(rank, n_gpus, hps):
     eval_loader = DataLoader(eval_dataset, num_workers=8, shuffle=False,
         batch_size=hps.train.batch_size, pin_memory=True,
         drop_last=False, collate_fn=collate_fn)
+  
+  if "use_mel_posterior_encoder" in hps.model.keys() and hps.model.use_mel_posterior_encoder == True:
+    print("Using mel posterior encoder for VITS2")
+    posterior_channels = 80 #vits2
+  else:
+    print("Using lin posterior encoder for VITS1")
+    posterior_channels = hps.data.filter_length // 2 + 1  
+
+  if "use_transformer_flows" in hps.model.keys() and hps.model.use_transformer_flows == True:
+    print("Using transformer flows for VITS2")
+    use_transformer_flows = True
+  else:
+    print("Using normal flows for VITS1")
+    use_transformer_flows = False
+
+  if "use_spk_conditioned_encoder" in hps.model.keys() and hps.model.use_spk_conditioned_encoder == True:
+    if hps.data.n_speakers == 0:
+      raise ValueError("n_speakers must be > 0 when using spk conditioned encoder to train multi-speaker model")
+    use_spk_conditioned_encoder = True
+  else:
+    print("Using normal encoder for VITS1")
+    use_spk_conditioned_encoder = False
 
   net_g = SynthesizerTrn(
       len(symbols),
-      hps.data.filter_length // 2 + 1,
+      posterior_channels,
       hps.train.segment_size // hps.data.hop_length,
       n_speakers=hps.data.n_speakers,
+      use_transformer_flows=use_transformer_flows,
+      use_spk_conditioned_encoder=use_spk_conditioned_encoder,
       **hps.model).cuda(rank)
   net_d = MultiPeriodDiscriminator(hps.model.use_spectral_norm).cuda(rank)
   optim_g = torch.optim.AdamW(

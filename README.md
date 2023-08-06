@@ -66,6 +66,7 @@ net_g(
 ```
 
 ## Features
+- (08/07/2023 update - vits2_vctk_base.json and vits2_ljs_base.json are ready to train; multi-speaker and single-speaker models respectively)
 - (08/06/2023 update - dry run is ready; duration predictor will complete within next week)
 - (08/05/2023 update - everything except the duration predictor is ready to train and we can expect some improvement from VITS1)
 - (08/04/2023 update - initial codebaase is ready; paper is being read)
@@ -86,6 +87,9 @@ net_g(
 - [x] Added mel spectrogram posterior encoder in notebook.
 - [x] Added mel spectrogram posterior encoder in train.py 
 - [x] Addded new config file (vits2_ljs_base.json; can be turned on using "use_mel_posterior_encoder" flag)
+#### Training scripts
+- [x] Added vits flags to train.py (single-speaer model)
+- [x] Added vits flags to train_ms.py (multi-speaker model)
 
 ## Special mentions
 - [@erogol](https://github.com/erogol) for quick feedback and guidance. (Please check his awesome [CoquiTTS](https://github.com/coqui-ai/TTS) repo).
