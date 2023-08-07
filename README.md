@@ -47,6 +47,7 @@ net_g = SynthesizerTrn(
     gin_channels=0,
     use_sdp=True, 
     use_transformer_flows=True, # <--- vits2 parameter
+    transformer_flow_type="fft", # <--- vits2 parameter (choose from "pre_conv" to "fft")
     use_spk_conditioned_encoder=True, # <--- vits2 parameter
 )
 
@@ -66,7 +67,8 @@ net_g(
 ```
 
 ## Features
-- (08/07/2023 update - vits2_vctk_base.json and vits2_ljs_base.json are ready to train; multi-speaker and single-speaker models respectively)
+- (08/072023) update 2 - transformer_flow_type "fft" and "pre_conv" added
+- (08/07/2023 update 1 - vits2_vctk_base.json and vits2_ljs_base.json are ready to train; multi-speaker and single-speaker models respectively)
 - (08/06/2023 update - dry run is ready; duration predictor will complete within next week)
 - (08/05/2023 update - everything except the duration predictor is ready to train and we can expect some improvement from VITS1)
 - (08/04/2023 update - initial codebaase is ready; paper is being read)
@@ -76,8 +78,12 @@ net_g(
 - [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification (Section 2.2)
 - [ ] Update models.py/train.py/losses.py
 #### Transformer block in the normalizing flow (fig 1b)
-- [x] Added transformer block to the normalizing flow in notebook.
-- [x] Added layers and blocks in models.py (ResidualCouplingTransformersLayer, ResidualCouplingTransformersBlock)
+- [x] Added transformer block to the normalizing flow in notebook. There are two types of transformer blocks: pre-convolution (my implementation) and FFT (from [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc/commit/fc8336fffd40c39bdb225c1b041ab4dd15fac4e9) repo)
+- [x] Added "transformer_flow_type" flag in config file. Choose from "pre_conv" to "fft"
+- [x] Added layers and blocks in models.py 
+(ResidualCouplingTransformersLayer, 
+ResidualCouplingTransformersBlock,
+TransformerCouplingLayer)
 - [x] Add in config file (vits2_ljs_base.json; can be turned on using "use_transformer_flows" flag)
 #### Speaker-conditioned text encoder (fig 1c)
 - [x] Added speaker embedding to the text encoder in notebook.

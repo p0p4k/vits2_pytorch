@@ -35,6 +35,7 @@
     "model": {
       "use_mel_posterior_encoder": true,
       "use_transformer_flows": true,
+      "transformer_flow_type": "pre_conv",
       "use_spk_conditioned_encoder": true,
       "inter_channels": 192,
       "hidden_channels": 192,

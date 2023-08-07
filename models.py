@@ -275,6 +275,63 @@ class ResidualCouplingTransformersLayer(nn.Module):
           x = torch.cat([x0, x1], 1)
           return x
 
+class TransformerCouplingLayer(nn.Module):
+  def __init__(self,
+      channels,
+      hidden_channels,
+      kernel_size,
+      n_layers,
+      n_heads,
+      p_dropout=0,
+      filter_channels=768,
+      mean_only=False,
+      gin_channels = 0
+      ):
+    assert channels % 2 == 0, "channels should be divisible by 2"
+    super().__init__()
+    self.channels = channels
+    self.hidden_channels = hidden_channels
+    self.kernel_size = kernel_size
+    self.n_layers = n_layers
+    self.half_channels = channels // 2
+    self.mean_only = mean_only
+
+    self.pre = nn.Conv1d(self.half_channels, hidden_channels, 1)
+    self.enc = attentions.FFT(
+       hidden_channels, 
+       filter_channels, 
+       n_heads, 
+       n_layers, 
+       kernel_size, 
+       p_dropout, 
+       isflow = True, 
+       gin_channels = gin_channels
+       )
+    self.post = nn.Conv1d(hidden_channels, self.half_channels * (2 - mean_only), 1)
+    self.post.weight.data.zero_()
+    self.post.bias.data.zero_()
+
+  def forward(self, x, x_mask, g=None, reverse=False):
+    x0, x1 = torch.split(x, [self.half_channels]*2, 1)
+    h = self.pre(x0) * x_mask
+    h = self.enc(h, x_mask, g=g)
+    stats = self.post(h) * x_mask
+    if not self.mean_only:
+      m, logs = torch.split(stats, [self.half_channels]*2, 1)
+    else:
+      m = stats
+      logs = torch.zeros_like(m)
+
+    if not reverse:
+      x1 = m + x1 * torch.exp(logs) * x_mask
+      x = torch.cat([x0, x1], 1)
+      logdet = torch.sum(logs, [1,2])
+      return x, logdet
+    else:
+      x1 = (x1 - m) * torch.exp(-logs) * x_mask
+      x = torch.cat([x0, x1], 1)
+      return x
+
 class ResidualCouplingTransformersBlock(nn.Module):
   def __init__(self,
       channels,
@@ -285,6 +342,7 @@ class ResidualCouplingTransformersBlock(nn.Module):
       n_flows=4,
       gin_channels=0,
       use_transformer_flows=False,
+      transformer_flow_type="pre_conv",
       ):
     super().__init__()
     self.channels = channels
@@ -297,9 +355,14 @@ class ResidualCouplingTransformersBlock(nn.Module):
 
     self.flows = nn.ModuleList()
     if use_transformer_flows:
-      for i in range(n_flows):
-        self.flows.append(ResidualCouplingTransformersLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
-        self.flows.append(modules.Flip())
+      if transformer_flow_type == "pre_conv":
+        for i in range(n_flows):
+          self.flows.append(ResidualCouplingTransformersLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+          self.flows.append(modules.Flip())
+      elif transformer_flow_type == "fft":
+         for i in range(n_flows):
+          self.flows.append(TransformerCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+          self.flows.append(modules.Flip())
     else:
       for i in range(n_flows):
         self.flows.append(modules.ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
@@ -573,6 +636,9 @@ class SynthesizerTrn(nn.Module):
     self.gin_channels = gin_channels
     self.use_spk_conditioned_encoder = kwargs.get("use_spk_conditioned_encoder", False)
     self.use_transformer_flows = kwargs.get("use_transformer_flows", False)
+    self.transformer_flow_type = kwargs.get("transformer_flow_type", "pre_conv")
+    if self.use_transformer_flows:
+      assert self.transformer_flow_type in ["pre_conv", "fft"], "transformer_flow_type must be one of ['pre_conv', 'fft']"
     self.use_sdp = use_sdp
 
     if self.use_spk_conditioned_encoder and gin_channels > 0:
@@ -592,7 +658,16 @@ class SynthesizerTrn(nn.Module):
     self.dec = Generator(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates, upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels)
     self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16, gin_channels=gin_channels)
     # self.flow = ResidualCouplingBlock(inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels)
-    self.flow = ResidualCouplingTransformersBlock(inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels, use_transformer_flows=self.use_transformer_flows)
+    self.flow = ResidualCouplingTransformersBlock(
+       inter_channels, 
+       hidden_channels, 
+       5, 
+       1, 
+       4, 
+       gin_channels=gin_channels, 
+       use_transformer_flows=self.use_transformer_flows,
+       transformer_flow_type=self.transformer_flow_type
+       )
 
     if use_sdp:
       self.dp = StochasticDurationPredictor(hidden_channels, 192, 3, 0.5, 4, gin_channels=gin_channels)

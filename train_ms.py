@@ -90,6 +90,8 @@ def run(rank, n_gpus, hps):
   if "use_transformer_flows" in hps.model.keys() and hps.model.use_transformer_flows == True:
     print("Using transformer flows for VITS2")
     use_transformer_flows = True
+    transformer_flow_type = hps.model.transformer_flow_type
+    assert transformer_flow_type in ["pre_conv", "fft"], "transformer_flow_type must be one of ['pre_conv', 'fft']"
   else:
     print("Using normal flows for VITS1")
     use_transformer_flows = False
@@ -108,6 +110,7 @@ def run(rank, n_gpus, hps):
       hps.train.segment_size // hps.data.hop_length,
       n_speakers=hps.data.n_speakers,
       use_transformer_flows=use_transformer_flows,
+      transformer_flow_type=transformer_flow_type,
       use_spk_conditioned_encoder=use_spk_conditioned_encoder,
       **hps.model).cuda(rank)
   net_d = MultiPeriodDiscriminator(hps.model.use_spectral_norm).cuda(rank)
