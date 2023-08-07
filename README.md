@@ -13,6 +13,7 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 
 ## Jupyter Notebook for initial experiments
 - [x] check the 'notebooks' folder
+- [x] check the 'notebooks/quick_previews' folder for quick glance
 
 ## How to run (dry-run)
 
