@@ -13,7 +13,6 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 
 ## Jupyter Notebook for initial experiments
 - [x] check the 'notebooks' folder
-- [x] check the 'notebooks/html_previews' folder for quick glance
 
 ## How to run (dry-run)
 
@@ -68,7 +67,6 @@ net_g(
 ```
 
 ## Features
-- (08/072023) update 3 - added 'notebooks/html_previews' folder for quick glance
 - (08/072023) update 2 - transformer_flow_type "fft" and "pre_conv" added. [@lexkoro](https://github.com/lexkoro) suggested "fft" transformer flow is better than "pre_conv" transformer flow in his intial experiments.
 - (08/07/2023 update 1 - vits2_vctk_base.json and vits2_ljs_base.json are ready to train; multi-speaker and single-speaker models respectively)
 - (08/06/2023 update - dry run is ready; duration predictor will complete within next week)
