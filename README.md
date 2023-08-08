@@ -27,6 +27,7 @@ python setup.py build_ext --inplace
 ```python
 import torch
 from models import SynthesizerTrn
+
 net_g = SynthesizerTrn(
     n_vocab=256,
     spec_channels=80, # <--- vits2 parameter (changed from 513 to 80)
@@ -67,7 +68,6 @@ net_g(
 
 # calculate loss and backpropagate
 ```
-
 ## Features
 - (08/08/2023) update - Added "use_noise_scaled_mas" flag in config file. Added sanity checks in notebooks. Everything except adverserial duration predictor is ready to train.
 - (08/072023) update 2 - transformer_flow_type "fft" and "pre_conv" added. [@lexkoro](https://github.com/lexkoro) suggested "fft" transformer flow is better than "pre_conv" transformer flow in his intial experiments.
@@ -99,9 +99,10 @@ TransformerCouplingLayer)
 - [x] Added mel spectrogram posterior encoder in notebook.
 - [x] Added mel spectrogram posterior encoder in train.py 
 - [x] Addded new config file (vits2_ljs_base.json; can be turned on using "use_mel_posterior_encoder" flag)
+- [x] Updated 'data_utils.py' to use the "use_mel_posterior_encoder" flag for vits2
 #### Training scripts
-- [x] Added vits flags to train.py (single-speaer model)
-- [x] Added vits flags to train_ms.py (multi-speaker model)
+- [x] Added vits2 flags to train.py (single-speaer model)
+- [x] Added vits2 flags to train_ms.py (multi-speaker model)
 
 ## Special mentions
 - [@erogol](https://github.com/erogol) for quick feedback and guidance. (Please check his awesome [CoquiTTS](https://github.com/coqui-ai/TTS) repo).
