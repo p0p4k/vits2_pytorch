@@ -68,13 +68,15 @@ net_g(
 
 # calculate loss and backpropagate
 ```
-## Features
-- (08/08/2023) update - Added "use_noise_scaled_mas" flag in config file. Added sanity checks in notebooks. Everything except adverserial duration predictor is ready to train.
+## Updates, TODOs, features and notes
+- (08/08/2023) update 2 - Changed data_utils.py to take in "use_mel_posterior_encoder" flag.
+- (08/08/2023) update 1 - Added "use_noise_scaled_mas" flag in config file. Added sanity checks in notebooks. Everything except adverserial duration predictor is ready to train.
 - (08/072023) update 2 - transformer_flow_type "fft" and "pre_conv" added. [@lexkoro](https://github.com/lexkoro) suggested "fft" transformer flow is better than "pre_conv" transformer flow in his intial experiments.
 - (08/07/2023 update 1 - vits2_vctk_base.json and vits2_ljs_base.json are ready to train; multi-speaker and single-speaker models respectively)
 - (08/06/2023 update - dry run is ready; duration predictor will complete within next week)
 - (08/05/2023 update - everything except the duration predictor is ready to train and we can expect some improvement from VITS1)
 - (08/04/2023 update - initial codebaase is ready; paper is being read)
+
 #### Duration predictor (fig 1a)
 - [x] Added LSTM discriminator to duration predictor in notebook.
 - [ ] Added adversarial loss to duration predictor
