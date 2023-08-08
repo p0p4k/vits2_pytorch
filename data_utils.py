@@ -6,7 +6,7 @@ import torch
 import torch.utils.data
 
 import commons 
-from mel_processing import spectrogram_torch
+from mel_processing import spectrogram_torch, mel_spectrogram_torch
 from utils import load_wav_to_torch, load_filepaths_and_text
 from text import text_to_sequence, cleaned_text_to_sequence
 
@@ -18,6 +18,7 @@ class TextAudioLoader(torch.utils.data.Dataset):
         3) computes spectrograms from audio files.
     """
     def __init__(self, audiopaths_and_text, hparams):
+        self.hparams = hparams
         self.audiopaths_and_text = load_filepaths_and_text(audiopaths_and_text)
         self.text_cleaners  = hparams.text_cleaners
         self.max_wav_value  = hparams.max_wav_value
@@ -27,6 +28,9 @@ class TextAudioLoader(torch.utils.data.Dataset):
         self.win_length     = hparams.win_length
         self.sampling_rate  = hparams.sampling_rate 
 
+        self.use_mel_spec_posterior = getattr(hparams, "use_mel_spec_posterior", False)
+        if self.use_mel_spec_posterior:
+            self.n_mel_channels = getattr(hparams, "n_mel_channels", 80)
         self.cleaned_text = getattr(hparams, "cleaned_text", False)
 
         self.add_blank = hparams.add_blank
@@ -63,6 +67,7 @@ class TextAudioLoader(torch.utils.data.Dataset):
         return (text, spec, wav)
 
     def get_audio(self, filename):
+        # TODO : if linear spec exists convert to mel from existing linear spec
         audio, sampling_rate = load_wav_to_torch(filename)
         if sampling_rate != self.sampling_rate:
             raise ValueError("{} {} SR doesn't match target {} SR".format(
@@ -70,12 +75,19 @@ class TextAudioLoader(torch.utils.data.Dataset):
         audio_norm = audio / self.max_wav_value
         audio_norm = audio_norm.unsqueeze(0)
         spec_filename = filename.replace(".wav", ".spec.pt")
+        if self.use_mel_spec_posterior:
+            spec_filename = spec_filename.replace(".spec.pt", ".mel.pt")
         if os.path.exists(spec_filename):
             spec = torch.load(spec_filename)
         else:
-            spec = spectrogram_torch(audio_norm, self.filter_length,
-                self.sampling_rate, self.hop_length, self.win_length,
-                center=False)
+            if self.use_mel_spec_posterior:
+                spec = mel_spectrogram_torch(audio_norm, self.filter_length,
+                    self.n_mel_channels, self.sampling_rate, self.hop_length,
+                    self.win_length, self.hparams.mel_fmin, self.hparams.mel_fmax, center=False)
+            else:
+                spec = spectrogram_torch(audio_norm, self.filter_length,
+                    self.sampling_rate, self.hop_length, self.win_length,
+                    center=False)
             spec = torch.squeeze(spec, 0)
             torch.save(spec, spec_filename)
         return spec, audio_norm

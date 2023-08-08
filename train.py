@@ -83,9 +83,11 @@ def run(rank, n_gpus, hps):
   if "use_mel_posterior_encoder" in hps.model.keys() and hps.model.use_mel_posterior_encoder == True:
     print("Using mel posterior encoder for VITS2")
     posterior_channels = 80 #vits2
+    hps.data.use_mel_posterior_encoder = True
   else:
     print("Using lin posterior encoder for VITS1")
     posterior_channels = hps.data.filter_length // 2 + 1  
+    hps.data.use_mel_posterior_encoder = False
 
   if "use_transformer_flows" in hps.model.keys() and hps.model.use_transformer_flows == True:
     print("Using transformer flows for VITS2")
