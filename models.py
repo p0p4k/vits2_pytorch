@@ -640,7 +640,10 @@ class SynthesizerTrn(nn.Module):
     if self.use_transformer_flows:
       assert self.transformer_flow_type in ["pre_conv", "fft"], "transformer_flow_type must be one of ['pre_conv', 'fft']"
     self.use_sdp = use_sdp
-
+    self.use_noise_scaled_mas = kwargs.get("use_noise_scaled_mas", False)
+    self.mas_noise_scale_initial = kwargs.get("mas_noise_scale_initial", 0.01)
+    self.noise_scale_delta = kwargs.get("noise_scale_delta", 2e-6)
+    self.current_mas_noise_scale = self.mas_noise_scale_initial
     if self.use_spk_conditioned_encoder and gin_channels > 0:
        self.enc_gin_channels = gin_channels
     else:
@@ -684,7 +687,6 @@ class SynthesizerTrn(nn.Module):
       g = self.emb_g(sid).unsqueeze(-1) # [b, h, 1]
     else:
       g = None
-
     z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g)
     z_p = self.flow(z, y_mask, g=g)
 
@@ -697,9 +699,13 @@ class SynthesizerTrn(nn.Module):
       neg_cent4 = torch.sum(-0.5 * (m_p ** 2) * s_p_sq_r, [1], keepdim=True) # [b, 1, t_s]
       neg_cent = neg_cent1 + neg_cent2 + neg_cent3 + neg_cent4
 
+      if self.use_noise_scaled_mas:
+        epsilon = torch.sum(logs_p, dim=1).exp() * torch.randn_like(neg_cent) * self.current_mas_noise_scale
+        neg_cent = neg_cent + epsilon
+
       attn_mask = torch.unsqueeze(x_mask, 2) * torch.unsqueeze(y_mask, -1)
       attn = monotonic_align.maximum_path(neg_cent, attn_mask.squeeze(1)).unsqueeze(1).detach()
-
+      
     w = attn.sum(2)
     if self.use_sdp:
       l_length = self.dp(x, x_mask, w, g=g)

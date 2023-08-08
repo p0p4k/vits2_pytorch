@@ -104,6 +104,15 @@ def run(rank, n_gpus, hps):
     print("Using normal encoder for VITS1")
     use_spk_conditioned_encoder = False
 
+  if "use_noise_scaled_mas" in hps.model.keys() and hps.model.use_noise_scaled_mas == True:
+    print("Using noise scaled MAS for VITS2")
+    use_noise_scaled_mas = True
+    mas_noise_scale_initial = 0.01
+    noise_scale_delta = 2e-6
+  else:
+    print("Using normal MAS for VITS1")
+    use_noise_scaled_mas = False
+
   net_g = SynthesizerTrn(
       len(symbols),
       posterior_channels,
@@ -112,6 +121,9 @@ def run(rank, n_gpus, hps):
       use_transformer_flows=use_transformer_flows,
       transformer_flow_type=transformer_flow_type,
       use_spk_conditioned_encoder=use_spk_conditioned_encoder,
+      use_noise_scaled_mas=use_noise_scaled_mas,
+      mas_noise_scale_initial = mas_noise_scale_initial,
+      noise_scale_delta = noise_scale_delta,
       **hps.model).cuda(rank)
   net_d = MultiPeriodDiscriminator(hps.model.use_spectral_norm).cuda(rank)
   optim_g = torch.optim.AdamW(
@@ -163,6 +175,9 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
   net_g.train()
   net_d.train()
   for batch_idx, (x, x_lengths, spec, spec_lengths, y, y_lengths, speakers) in enumerate(train_loader):
+    if net_g.use_noise_scaled_mas:
+      current_mas_noise_scale = net_g.mas_noise_scale_initial - net_g.noise_scale_delta * global_step
+      net_g.current_mas_noise_scale = max(current_mas_noise_scale, 0.0)
     x, x_lengths = x.cuda(rank, non_blocking=True), x_lengths.cuda(rank, non_blocking=True)
     spec, spec_lengths = spec.cuda(rank, non_blocking=True), spec_lengths.cuda(rank, non_blocking=True)
     y, y_lengths = y.cuda(rank, non_blocking=True), y_lengths.cuda(rank, non_blocking=True)
