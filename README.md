@@ -78,6 +78,8 @@ net_g(
     y=y,
     y_lengths=y_lengths,
 )
+
+# calculate loss and backpropagate
 ```
 
 ## Training Example
@@ -89,8 +91,6 @@ python train.py -c configs/vits2_ljs_base.json -m ljs_base
 python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ```
 
-# calculate loss and backpropagate
-```
 ## Updates, TODOs, features and notes
 - (08/08/2023) update 2 - Changed data_utils.py to take in "use_mel_posterior_encoder" flag.
 - (08/08/2023) update 1 - Added "use_noise_scaled_mas" flag in config file. Added sanity checks in notebooks. Everything except adverserial duration predictor is ready to train.
