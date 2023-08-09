@@ -13,7 +13,6 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 
 ## Jupyter Notebook for initial experiments
 - [x] check the 'notebooks' folder
-- [x] check the 'notebooks/quick_previews' folder for quick glance
 
 ## pre-requisites
 0. Python >= 3.6
@@ -92,6 +91,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ```
 
 ## Updates, TODOs, features and notes
+- (08/09/2023) update - Corrected MAS with noise_scale and updated train_ms.py, train.py (thanks to [@KdaiP](https://github.com/KdaiP) for testing and pointing out the bug in MAS)
 - (08/08/2023) update 2 - Changed data_utils.py to take in "use_mel_posterior_encoder" flag.
 - (08/08/2023) update 1 - Added "use_noise_scaled_mas" flag in config file. Added sanity checks in notebooks. Everything except adverserial duration predictor is ready to train.
 - (08/072023) update 2 - transformer_flow_type "fft" and "pre_conv" added. [@lexkoro](https://github.com/lexkoro) suggested "fft" transformer flow is better than "pre_conv" transformer flow in his intial experiments.
