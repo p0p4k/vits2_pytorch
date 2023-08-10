@@ -1,5 +1,6 @@
 import math
 import os
+from packaging import version
 import random
 import torch
 from torch import nn
@@ -63,9 +64,13 @@ def spectrogram_torch(y, n_fft, sampling_rate, hop_size, win_size, center=False)
     y = torch.nn.functional.pad(y.unsqueeze(1), (int((n_fft-hop_size)/2), int((n_fft-hop_size)/2)), mode='reflect')
     y = y.squeeze(1)
 
-    spec = torch.stft(y, n_fft, hop_length=hop_size, win_length=win_size, window=hann_window[wnsize_dtype_device],
-                      center=center, pad_mode='reflect', normalized=False, onesided=True, return_complex=False)
-
+    if version.parse(torch.____version__) >= version.parse("2"):
+        spec = torch.stft(y, n_fft, hop_length=hop_size, win_length=win_size, window=hann_window[wnsize_dtype_device],
+                          center=center, pad_mode='reflect', normalized=False, onesided=True, return_complex=False)
+    else:
+        spec = torch.stft(y, n_fft, hop_length=hop_size, win_length=win_size, window=hann_window[wnsize_dtype_device],
+                      center=center, pad_mode='reflect', normalized=False, onesided=True)
+        
     spec = torch.sqrt(spec.pow(2).sum(-1) + 1e-6)
     return spec
 
@@ -101,8 +106,12 @@ def mel_spectrogram_torch(y, n_fft, num_mels, sampling_rate, hop_size, win_size,
     y = torch.nn.functional.pad(y.unsqueeze(1), (int((n_fft-hop_size)/2), int((n_fft-hop_size)/2)), mode='reflect')
     y = y.squeeze(1)
 
-    spec = torch.stft(y, n_fft, hop_length=hop_size, win_length=win_size, window=hann_window[wnsize_dtype_device],
-                      center=center, pad_mode='reflect', normalized=False, onesided=True, return_complex=False)
+    if version.parse(torch.____version__) >= version.parse("2"):
+        spec = torch.stft(y, n_fft, hop_length=hop_size, win_length=win_size, window=hann_window[wnsize_dtype_device],
+                          center=center, pad_mode='reflect', normalized=False, onesided=True, return_complex=False)
+    else:
+        spec = torch.stft(y, n_fft, hop_length=hop_size, win_length=win_size, window=hann_window[wnsize_dtype_device],
+                      center=center, pad_mode='reflect', normalized=False, onesided=True)
 
     spec = torch.sqrt(spec.pow(2).sum(-1) + 1e-6)
 
