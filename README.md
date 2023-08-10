@@ -16,6 +16,7 @@ We will build this repo based on the [VITS repo](https://github.com/jaywalnut310
 
 ## pre-requisites
 0. Python >= 3.6
+0. Now supports Pytorch version 2.0
 0. Clone this repository
 0. Install python requirements. Please refer [requirements.txt](requirements.txt)
     1. You may need to install espeak first: `apt-get install espeak`
@@ -91,6 +92,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ```
 
 ## Updates, TODOs, features and notes
+- (08/10/2023) update 1 - updated multi_GPU training, support pytorch2.0 [#5](https://github.com/p0p4k/vits2_pytorch/pull/5)
 - (08/09/2023) update - Corrected MAS with noise_scale and updated train_ms.py, train.py (thanks to [@KdaiP](https://github.com/KdaiP) for testing and pointing out the bug in MAS)
 - (08/08/2023) update 2 - Changed data_utils.py to take in "use_mel_posterior_encoder" flag.
 - (08/08/2023) update 1 - Added "use_noise_scaled_mas" flag in config file. Added sanity checks in notebooks. Everything except adverserial duration predictor is ready to train.
@@ -133,3 +135,4 @@ TransformerCouplingLayer)
 - [@erogol](https://github.com/erogol) for quick feedback and guidance. (Please check his awesome [CoquiTTS](https://github.com/coqui-ai/TTS) repo).
 - [@lexkoro](https://github.com/lexkoro) for discussions and help with the prototype training.
 - [@manmay-nakhashi](https://github.com/manmay-nakhashi) for discussions and help with the code.
+- [@athenasaurav](https://github.com/athenasaurav) for offering GPU support for training.
