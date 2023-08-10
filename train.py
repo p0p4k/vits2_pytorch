@@ -12,6 +12,7 @@ import torch.multiprocessing as mp
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.cuda.amp import autocast, GradScaler
+import tqdm
 
 import commons
 import utils
@@ -120,10 +121,6 @@ def run(rank, n_gpus, hps):
       len(symbols),
       posterior_channels,
       hps.train.segment_size // hps.data.hop_length,
-      use_transformer_flows=use_transformer_flows,
-      transformer_flow_type=transformer_flow_type,
-      use_spk_conditioned_encoder=use_spk_conditioned_encoder,
-      use_noise_scaled_mas=use_noise_scaled_mas,
       mas_noise_scale_initial = mas_noise_scale_initial,
       noise_scale_delta = noise_scale_delta,
       **hps.model).cuda(rank)
@@ -176,7 +173,11 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
   
   net_g.train()
   net_d.train()
-  for batch_idx, (x, x_lengths, spec, spec_lengths, y, y_lengths) in enumerate(train_loader):
+  if rank == 0:
+      loader = tqdm.tqdm(train_loader, desc='Loading train data')
+  else:
+      loader = train_loader
+  for batch_idx, (x, x_lengths, spec, spec_lengths, y, y_lengths) in enumerate(loader):
     if net_g.use_noise_scaled_mas:
       current_mas_noise_scale = net_g.module.mas_noise_scale_initial - net_g.module.noise_scale_delta * global_step
       net_g.module.current_mas_noise_scale = max(current_mas_noise_scale, 0.0)
