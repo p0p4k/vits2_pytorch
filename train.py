@@ -80,7 +80,8 @@ def run(rank, n_gpus, hps):
     eval_loader = DataLoader(eval_dataset, num_workers=8, shuffle=False,
         batch_size=hps.train.batch_size, pin_memory=True,
         drop_last=False, collate_fn=collate_fn)
-  
+  # some of these flags are not being used in the code and directly set in hps json file.
+  # they are kept here for reference and prototyping.
   if "use_mel_posterior_encoder" in hps.model.keys() and hps.model.use_mel_posterior_encoder == True:
     print("Using mel posterior encoder for VITS2")
     posterior_channels = 80 #vits2
@@ -178,7 +179,7 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
   else:
       loader = train_loader
   for batch_idx, (x, x_lengths, spec, spec_lengths, y, y_lengths) in enumerate(loader):
-    if net_g.use_noise_scaled_mas:
+    if net_g.module.use_noise_scaled_mas:
       current_mas_noise_scale = net_g.module.mas_noise_scale_initial - net_g.module.noise_scale_delta * global_step
       net_g.module.current_mas_noise_scale = max(current_mas_noise_scale, 0.0)
     x, x_lengths = x.cuda(rank, non_blocking=True), x_lengths.cuda(rank, non_blocking=True)
