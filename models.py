@@ -255,10 +255,14 @@ class ResidualCouplingTransformersLayer(nn.Module):
   def forward(self, x, x_mask, g=None, reverse=False):
       x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
       x0_ = self.pre_transformer(x0 * x_mask, x_mask) #vits2
-      x0_ = x0_ + x0 #vits2
+      x0_ = x0_ + x0 #vits2 residual connection
       h = self.pre(x0_) * x_mask #changed from x0 to x0_ to retain x0 for the flow
       h = self.enc(h, x_mask, g=g)
-      h = self.post_transformer(h, x_mask) #vits2
+
+      #vits2 - (experimental;uncomment the following 2 line to use)
+      # h_ = self.post_transformer(h, x_mask) 
+      # h = h + h_ #vits2 residual connection 
+
       stats = self.post(h) * x_mask
       if not self.mean_only:
           m, logs = torch.split(stats, [self.half_channels] * 2, 1)
@@ -275,7 +279,7 @@ class ResidualCouplingTransformersLayer(nn.Module):
           x = torch.cat([x0, x1], 1)
           return x
 
-class TransformerCouplingLayer(nn.Module):
+class FFTransformerCouplingLayer(nn.Module):
   def __init__(self,
       channels,
       hidden_channels,
@@ -314,7 +318,8 @@ class TransformerCouplingLayer(nn.Module):
   def forward(self, x, x_mask, g=None, reverse=False):
     x0, x1 = torch.split(x, [self.half_channels]*2, 1)
     h = self.pre(x0) * x_mask
-    h = self.enc(h, x_mask, g=g)
+    h_ = self.enc(h, x_mask, g=g)
+    h = h_ + h
     stats = self.post(h) * x_mask
     if not self.mean_only:
       m, logs = torch.split(stats, [self.half_channels]*2, 1)
@@ -332,6 +337,54 @@ class TransformerCouplingLayer(nn.Module):
       x = torch.cat([x0, x1], 1)
       return x
 
+class MonoTransformerFlowLayer(nn.Module):
+  def __init__(
+      self,
+      channels,
+      hidden_channels,
+      mean_only=False,
+  ):
+    assert channels % 2 == 0, "channels should be divisible by 2"
+    super().__init__()
+    self.channels = channels
+    self.hidden_channels = hidden_channels
+    self.half_channels = channels // 2
+    self.mean_only = mean_only
+    #vits2
+    self.pre_transformer = attentions.Encoder(
+        self.half_channels,
+        self.half_channels,
+        n_heads=2,
+        n_layers=2,
+        kernel_size=3,
+        p_dropout=0.1,
+        window_size=None
+        )
+    
+    self.post = nn.Conv1d(self.half_channels, self.half_channels * (2 - mean_only), 1)
+    self.post.weight.data.zero_()
+    self.post.bias.data.zero_()
+
+  def forward(self, x, x_mask, g=None, reverse=False):
+    x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
+    x0_ = self.pre_transformer(x0 * x_mask, x_mask) #vits2
+    h = x0_ + x0 #vits2
+    stats = self.post(h) * x_mask
+    if not self.mean_only:
+        m, logs = torch.split(stats, [self.half_channels] * 2, 1)
+    else:
+        m = stats
+        logs = torch.zeros_like(m)
+    if not reverse:
+        x1 = m + x1 * torch.exp(logs) * x_mask
+        x = torch.cat([x0, x1], 1)
+        logdet = torch.sum(logs, [1, 2])
+        return x, logdet
+    else:
+        x1 = (x1 - m) * torch.exp(-logs) * x_mask
+        x = torch.cat([x0, x1], 1)
+        return x
+        
 class ResidualCouplingTransformersBlock(nn.Module):
   def __init__(self,
       channels,
@@ -361,7 +414,12 @@ class ResidualCouplingTransformersBlock(nn.Module):
           self.flows.append(modules.Flip())
       elif transformer_flow_type == "fft":
          for i in range(n_flows):
-          self.flows.append(TransformerCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+          self.flows.append(FFTransformerCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+          self.flows.append(modules.Flip())
+      elif transformer_flow_type == "mono_layer":
+        self.flows.append(MonoTransformerFlowLayer(channels, hidden_channels, mean_only=True))
+        for i in range(n_flows):
+          self.flows.append(modules.ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
           self.flows.append(modules.Flip())
     else:
       for i in range(n_flows):
@@ -636,9 +694,9 @@ class SynthesizerTrn(nn.Module):
     self.gin_channels = gin_channels
     self.use_spk_conditioned_encoder = kwargs.get("use_spk_conditioned_encoder", False)
     self.use_transformer_flows = kwargs.get("use_transformer_flows", False)
-    self.transformer_flow_type = kwargs.get("transformer_flow_type", "pre_conv")
+    self.transformer_flow_type = kwargs.get("transformer_flow_type", "mono_layer")
     if self.use_transformer_flows:
-      assert self.transformer_flow_type in ["pre_conv", "fft"], "transformer_flow_type must be one of ['pre_conv', 'fft']"
+      assert self.transformer_flow_type in ["pre_conv", "fft", "mono_layer"], "transformer_flow_type must be one of ['pre_conv', 'fft','mono_layer']"
     self.use_sdp = use_sdp
     self.use_noise_scaled_mas = kwargs.get("use_noise_scaled_mas", False)
     self.mas_noise_scale_initial = kwargs.get("mas_noise_scale_initial", 0.01)

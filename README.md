@@ -1,4 +1,5 @@
-[this is a work in progress, feel free to contribute! Model will be ready if this line is removed]
+[~this is a work in progress, feel free to contribute! Model will be ready if this line is removed~]
+[Most of the code is ready and the model is ready to train. Hopefully, someone from the community can share some results ASAP! Thanks!]
 
 # VITS2: Improving Quality and Efficiency of Single-Stage Text-to-Speech with Adversarial Learning and Architecture Design
 ### Jungil Kong, Jihoon Park, Beomjeong Kim, Jeongmin Kim, Dohee Kong, Sangjin Kim 
@@ -9,21 +10,22 @@ Unofficial implementation of the [VITS2 paper](https://arxiv.org/abs/2307.16430)
 Single-stage text-to-speech models have been actively studied recently, and their results have outperformed two-stage pipeline systems. Although the previous single-stage model has made great progress, there is room for improvement in terms of its intermittent unnaturalness, computational efficiency, and strong dependence on phoneme conversion. In this work, we introduce VITS2, a single-stage text-to-speech model that efficiently synthesizes a more natural speech by improving several aspects of the previous work. We propose improved structures and training mechanisms and present that the proposed methods are effective in improving naturalness, similarity of speech characteristics in a multi-speaker model, and efficiency of training and inference. Furthermore, we demonstrate that the strong dependence on phoneme conversion in previous works can be significantly reduced with our method, which allows a fully end-toend single-stage approach.
 
 ## Credits
-We will build this repo based on the [VITS repo](https://github.com/jaywalnut310/vits). Currently I am adding vits2 changes in the 'notebooks' folder. The goal is to make this model easier to transfer learning from VITS pretrained model!
+- We will build this repo based on the [VITS repo](https://github.com/jaywalnut310/vits). Currently I am adding vits2 changes in the 'notebooks' folder. The goal is to make this model easier to transfer learning from VITS pretrained model!
+- (08-17-2023) - The authors were really kind to guide me through the paper and answer my questions. I am open to discuss any changes or answer questions regarding the implementation. Please feel free to open an issue or contact me directly.
 
 ## Jupyter Notebook for initial experiments
 - [x] check the 'notebooks' folder
 
 ## pre-requisites
-0. Python >= 3.6
-0. Now supports Pytorch version 2.0
-0. Clone this repository
-0. Install python requirements. Please refer [requirements.txt](requirements.txt)
+1. Python >= 3.6
+2. Now supports Pytorch version 2.0
+3. Clone this repository
+4. Install python requirements. Please refer [requirements.txt](requirements.txt)
     1. You may need to install espeak first: `apt-get install espeak`
-0. Download datasets
+5. Download datasets
     1. Download and extract the LJ Speech dataset, then rename or create a link to the dataset folder: `ln -s /path/to/LJSpeech-1.1/wavs DUMMY1`
     1. For mult-speaker setting, download and extract the VCTK dataset, and downsample wav files to 22050 Hz. Then rename or create a link to the dataset folder: `ln -s /path/to/VCTK-Corpus/downsampled_wavs DUMMY2`
-0. Build Monotonic Alignment Search and run preprocessing if you use your own datasets.
+6. Build Monotonic Alignment Search and run preprocessing if you use your own datasets.
 
 ```sh
 # Cython-version Monotonoic Alignment Search
@@ -62,7 +64,7 @@ net_g = SynthesizerTrn(
     gin_channels=0,
     use_sdp=True, 
     use_transformer_flows=True, # <--- vits2 parameter
-    transformer_flow_type="fft", # <--- vits2 parameter (choose from "pre_conv" to "fft")
+    transformer_flow_type="fft", # <--- vits2 parameter (choose from "pre_conv","fft","mono_layer")
     use_spk_conditioned_encoder=True, # <--- vits2 parameter
     use_noise_scaled_mas=True, # <--- vits2 parameter
 )
@@ -92,6 +94,9 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ```
 
 ## Updates, TODOs, features and notes
+    note - duration predictor is not adversarial yet. In my earlier experiments with VITS-1, I used deterministic duration predictor (no-sdp) and found that it is quite good. So, I am not sure if adversarial duration predictor is necessary. But, I will add it sooner or later if it is necessary. Also, I want to combine parallel tacotron-2 and naturalspeech-1's learnable upsampling layer to remove MAS completely for E2E differentiable model.
+
+- (08/17/2023) update 1 - After some discussions with the authors, I implemented "mono-layer" transformer flow which seems to be the closest to what they intend. It is a single layer transformer flow used as the first layer before the traditional conv-residual-flows. Need to experiment to check the best transformer flow type of the three. (pre_conv, fft, mono_layer). But, each of the layers serves similar purpose of long range dependency using attention.
 - (08/10/2023) update 1 - updated multi_GPU training, support pytorch2.0 [#5](https://github.com/p0p4k/vits2_pytorch/pull/5)
 - (08/09/2023) update - Corrected MAS with noise_scale and updated train_ms.py, train.py (thanks to [@KdaiP](https://github.com/KdaiP) for testing and pointing out the bug in MAS)
 - (08/08/2023) update 2 - Changed data_utils.py to take in "use_mel_posterior_encoder" flag.
@@ -102,21 +107,22 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 - (08/05/2023 update - everything except the duration predictor is ready to train and we can expect some improvement from VITS1)
 - (08/04/2023 update - initial codebaase is ready; paper is being read)
 
-#### Duration predictor (fig 1a)
+#### Duration predictor (fig 1a) 
 - [x] Added LSTM discriminator to duration predictor in notebook.
-- [ ] Added adversarial loss to duration predictor
+- [ ] Added adversarial loss to duration predictor (TODO)
 - [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification (Section 2.2)
 - [x] Added "use_noise_scaled_mas" flag in config file. Choose from True or False; updates noise while training based on number of steps and never goes below 0.0
 - [x] Update models.py/train.py/train_ms.py
 - [x] Update config files (vits2_vctk_base.json; vits2_ljs_base.json)
-- [ ] Update losses.py
+- [ ] Update losses.py (TODO)
 #### Transformer block in the normalizing flow (fig 1b)
-- [x] Added transformer block to the normalizing flow in notebook. There are two types of transformer blocks: pre-convolution (my implementation) and FFT (from [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc/commit/fc8336fffd40c39bdb225c1b041ab4dd15fac4e9) repo)
-- [x] Added "transformer_flow_type" flag in config file. Choose from "pre_conv" to "fft"
+- [x] Added transformer block to the normalizing flow in notebook. There are three types of transformer blocks: pre-convolution (my implementation), FFT (from [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc/commit/fc8336fffd40c39bdb225c1b041ab4dd15fac4e9) repo) and mono-layer.
+- [x] Added "transformer_flow_type" flag in config file. Choose from "pre_conv" or "fft" or "mono_layer".
 - [x] Added layers and blocks in models.py 
 (ResidualCouplingTransformersLayer, 
 ResidualCouplingTransformersBlock,
-TransformerCouplingLayer)
+FFTransformerCouplingLayer,
+MonoTransformerFlowLayer)
 - [x] Add in config file (vits2_ljs_base.json; can be turned on using "use_transformer_flows" flag)
 #### Speaker-conditioned text encoder (fig 1c)
 - [x] Added speaker embedding to the text encoder in notebook.
