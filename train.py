@@ -94,10 +94,10 @@ def run(rank, n_gpus, hps):
   # they are kept here for reference and prototyping.
 
   if "use_transformer_flows" in hps.model.keys() and hps.model.use_transformer_flows == True:
-    print("Using transformer flows for VITS2")
     use_transformer_flows = True
     transformer_flow_type = hps.model.transformer_flow_type
-    assert transformer_flow_type in ["pre_conv", "fft"], "transformer_flow_type must be one of ['pre_conv', 'fft']"
+    print(f"Using transformer flows {transformer_flow_type} for VITS2")
+    assert transformer_flow_type in ["pre_conv", "fft","mono_layer"], "transformer_flow_type must be one of ['pre_conv', 'fft', 'mono_layer']"
   else:
     print("Using normal flows for VITS1")
     use_transformer_flows = False
