@@ -118,6 +118,7 @@ def run(rank, n_gpus, hps):
   else:
     print("Using normal MAS for VITS1")
     use_noise_scaled_mas = False
+    mas_noise_scale_initial = 0.0
   
   net_g = SynthesizerTrn(
       len(symbols),
