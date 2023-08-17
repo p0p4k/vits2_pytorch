@@ -63,6 +63,15 @@ def run(rank, n_gpus, hps):
   dist.init_process_group(backend='nccl', init_method='env://', world_size=n_gpus, rank=rank)
   torch.manual_seed(hps.train.seed)
   torch.cuda.set_device(rank)
+  
+  if "use_mel_posterior_encoder" in hps.model.keys() and hps.model.use_mel_posterior_encoder == True:
+    print("Using mel posterior encoder for VITS2")
+    posterior_channels = 80 #vits2
+    hps.data.use_mel_posterior_encoder = True
+  else:
+    print("Using lin posterior encoder for VITS1")
+    posterior_channels = hps.data.filter_length // 2 + 1  
+    hps.data.use_mel_posterior_encoder = False
 
   train_dataset = TextAudioLoader(hps.data.training_files, hps.data)
   train_sampler = DistributedBucketSampler(
@@ -82,14 +91,6 @@ def run(rank, n_gpus, hps):
         drop_last=False, collate_fn=collate_fn)
   # some of these flags are not being used in the code and directly set in hps json file.
   # they are kept here for reference and prototyping.
-  if "use_mel_posterior_encoder" in hps.model.keys() and hps.model.use_mel_posterior_encoder == True:
-    print("Using mel posterior encoder for VITS2")
-    posterior_channels = 80 #vits2
-    hps.data.use_mel_posterior_encoder = True
-  else:
-    print("Using lin posterior encoder for VITS1")
-    posterior_channels = hps.data.filter_length // 2 + 1  
-    hps.data.use_mel_posterior_encoder = False
 
   if "use_transformer_flows" in hps.model.keys() and hps.model.use_transformer_flows == True:
     print("Using transformer flows for VITS2")

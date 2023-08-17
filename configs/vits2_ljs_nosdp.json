@@ -1,9 +1,9 @@
 {
-  "train": {
+"train": {
     "log_interval": 200,
     "eval_interval": 1000,
     "seed": 1234,
-    "epochs": 10000,
+    "epochs": 20000,
     "learning_rate": 2e-4,
     "betas": [0.8, 0.99],
     "eps": 1e-9,
@@ -15,10 +15,11 @@
     "warmup_epochs": 0,
     "c_mel": 45,
     "c_kl": 1.0
-  },
-  "data": {
-    "training_files":"filelists/vctk_audio_sid_text_train_filelist.txt.cleaned",
-    "validation_files":"filelists/vctk_audio_sid_text_val_filelist.txt.cleaned",
+},
+"data": {
+    "use_mel_posterior_encoder": true,
+    "training_files":"filelists/ljs_audio_text_train_filelist.txt.cleaned",
+    "validation_files":"filelists/ljs_audio_text_val_filelist.txt.cleaned",
     "text_cleaners":["english_cleaners2"],
     "max_wav_value": 32768.0,
     "sampling_rate": 22050,
@@ -28,11 +29,16 @@
     "n_mel_channels": 80,
     "mel_fmin": 0.0,
     "mel_fmax": null,
-    "add_blank": true,
-    "n_speakers": 109,
+    "add_blank": false,
+    "n_speakers": 0,
     "cleaned_text": true
-  },
-  "model": {
+},
+"model": {
+    "use_mel_posterior_encoder": true,
+    "use_transformer_flows": true,
+    "transformer_flow_type": "pre_conv",
+    "use_spk_conditioned_encoder": false,
+    "use_noise_scaled_mas": true,
     "inter_channels": 192,
     "hidden_channels": 192,
     "filter_channels": 768,
@@ -48,6 +54,6 @@
     "upsample_kernel_sizes": [16,16,4,4],
     "n_layers_q": 3,
     "use_spectral_norm": false,
-    "gin_channels": 256
-  }
+    "use_sdp": false
+}
 }

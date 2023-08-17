@@ -17,6 +17,7 @@
       "c_kl": 1.0
     },
     "data": {
+      "use_mel_posterior_encoder": true,
       "training_files":"filelists/vctk_audio_sid_text_train_filelist.txt.cleaned",
       "validation_files":"filelists/vctk_audio_sid_text_val_filelist.txt.cleaned",
       "text_cleaners":["english_cleaners2"],
