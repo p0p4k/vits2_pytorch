@@ -96,6 +96,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ## Updates, TODOs, features and notes
     note - duration predictor is not adversarial yet. In my earlier experiments with VITS-1, I used deterministic duration predictor (no-sdp) and found that it is quite good. So, I am not sure if adversarial duration predictor is necessary. But, I will add it sooner or later if it is necessary. Also, I want to combine parallel tacotron-2 and naturalspeech-1's learnable upsampling layer to remove MAS completely for E2E differentiable model.
 
+- (08/17/2023) update 3 - QOL changes to generate mel spec from existing lin spec. Updated inference.ipynb.
 - (08/17/2023) update 2 - hotfix for "use_mel_posterior_encoder" flag in config file. Should fix [#8](https://github.com/p0p4k/vits2_pytorch/issues/8) and [#9](https://github.com/p0p4k/vits2_pytorch/issues/9). Will do a if-else cleanup later.
 - (08/17/2023) update 1 - After some discussions with the authors, I implemented "mono-layer" transformer flow which seems to be the closest to what they intend. It is a single layer transformer flow used as the first layer before the traditional conv-residual-flows. Need to experiment to check the best transformer flow type of the three. (pre_conv, fft, mono_layer). But, each of the layers serves similar purpose of long range dependency using attention.
 - (08/10/2023) update 1 - updated multi_GPU training, support pytorch2.0 [#5](https://github.com/p0p4k/vits2_pytorch/pull/5)

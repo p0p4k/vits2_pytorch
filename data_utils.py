@@ -6,7 +6,7 @@ import torch
 import torch.utils.data
 
 import commons 
-from mel_processing import spectrogram_torch, mel_spectrogram_torch
+from mel_processing import spectrogram_torch, mel_spectrogram_torch, spec_to_mel_torch
 from utils import load_wav_to_torch, load_filepaths_and_text
 from text import text_to_sequence, cleaned_text_to_sequence
 
@@ -81,6 +81,15 @@ class TextAudioLoader(torch.utils.data.Dataset):
             spec = torch.load(spec_filename)
         else:
             if self.use_mel_spec_posterior:
+                ''' TODO : (need verification) 
+                if linear spec exists convert to 
+                mel from existing linear spec (uncomment below lines) '''
+                # if os.path.exists(filename.replace(".wav", ".spec.pt")):
+                #     # spec, n_fft, num_mels, sampling_rate, fmin, fmax
+                #     spec = spec_to_mel_torch(
+                #         torch.load(filename.replace(".wav", ".spec.pt")), 
+                #         self.filter_length, self.n_mel_channels, self.sampling_rate,
+                #         self.hparams.mel_fmin, self.hparams.mel_fmax)
                 spec = mel_spectrogram_torch(audio_norm, self.filter_length,
                     self.n_mel_channels, self.sampling_rate, self.hop_length,
                     self.win_length, self.hparams.mel_fmin, self.hparams.mel_fmax, center=False)
