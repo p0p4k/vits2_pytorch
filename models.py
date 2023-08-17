@@ -106,13 +106,22 @@ class DurationDiscriminator(nn.Module):
         nn.Sigmoid() 
     )
 
-  def forward(self, x, durs):
+  def forward(self, x, durs, durs_hat):
+    x = x.transpose(1,2)
+    durs = durs.transpose(1,2)
+    durs_hat = durs_hat.transpose(1,2)
     assert x.size(-1) + durs.size(-1) == self.input_dim, "Input dimensions mismatch for Duration Discriminator!"
-    combined_input = torch.cat((x, durs), dim=-1)
-    lstm_out, _ = self.lstm(combined_input)
-    last_output = lstm_out[:, -1, :]
-    discriminator_output = self.output_layer(last_output)
-    return discriminator_output
+    combined_input_r = torch.cat((x, durs), dim=-1)
+    lstm_out_r, _ = self.lstm(combined_input_r)
+    last_output_r = lstm_out_r[:, -1, :]
+    durs_d_r = self.output_layer(last_output_r)
+
+    combined_input_g = torch.cat((x, durs_hat), dim=-1)
+    lstm_out_g, _ = self.lstm(combined_input_g)
+    last_output_g = lstm_out_g[:, -1, :]
+    durs_d_g = self.output_layer(last_output_g)
+      
+    return durs_d_r, durs_d_g
 
 class DurationPredictor(nn.Module):
   def __init__(self, in_channels, filter_channels, kernel_size, p_dropout, gin_channels=0):

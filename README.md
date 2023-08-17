@@ -89,6 +89,9 @@ net_g(
 # LJ Speech
 python train.py -c configs/vits2_ljs_base.json -m ljs_base
 
+## Training Duration Predictor LJ Speech
+python train_dp.py -c configs/vits2_ljs_base.json -m ljs_base_dp -v /path/to/pretrained_ljs.pth
+
 # VCTK
 python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ```

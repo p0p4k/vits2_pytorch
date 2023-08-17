@@ -30,6 +30,17 @@ def discriminator_loss(disc_real_outputs, disc_generated_outputs):
 
   return loss, r_losses, g_losses
 
+def dur_discriminator_loss(d_disc_r, d_disc_g):
+  loss = 0
+  r_loss = torch.mean((1-d_disc_r)**2)
+  g_loss = torch.mean(d_disc_g**2)
+  loss += (r_loss + g_loss)
+  return loss
+
+def dur_generator_loss(d_disc_g):
+  d_disc_g = d_disc_g.float()
+  loss = torch.mean((1-d_disc_g)*2)
+  return loss
 
 def generator_loss(disc_outputs):
   loss = 0

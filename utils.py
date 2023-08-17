@@ -147,6 +147,8 @@ def get_hparams(init=True):
                       help='JSON file for configuration')
   parser.add_argument('-m', '--model', type=str, required=True,
                       help='Model name')
+  parser.add_argument('-v', '--vits2_checkpoint_path', type=str, default="/path/to/pretrained_ljs.pth",
+                    help='Checkpoint Path of VITS2')
   
   args = parser.parse_args()
   model_dir = os.path.join("./logs", args.model)
