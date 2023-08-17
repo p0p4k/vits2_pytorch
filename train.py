@@ -45,7 +45,7 @@ def main():
 
   n_gpus = torch.cuda.device_count()
   os.environ['MASTER_ADDR'] = 'localhost'
-  os.environ['MASTER_PORT'] = '80000'
+  os.environ['MASTER_PORT'] = '6060'
 
   hps = utils.get_hparams()
   mp.spawn(run, nprocs=n_gpus, args=(n_gpus, hps,))
@@ -119,6 +119,7 @@ def run(rank, n_gpus, hps):
     print("Using normal MAS for VITS1")
     use_noise_scaled_mas = False
     mas_noise_scale_initial = 0.0
+    noise_scale_delta = 0.0
   
   net_g = SynthesizerTrn(
       len(symbols),
