@@ -1,11 +1,15 @@
-[~this is a work in progress, feel free to contribute! Model will be ready if this line is removed~]
+~[this is a work in progress, feel free to contribute! Model will be ready if this line is removed]~
 [Most of the code is ready and the model is ready to train. Hopefully, someone from the community can share some results ASAP! Thanks!]
+
+# Sample audio
+- Training is in progress. Below is a sample @42k steps. (08/20/2023)
+![test.wav](resources/test.wav)
 
 # VITS2: Improving Quality and Efficiency of Single-Stage Text-to-Speech with Adversarial Learning and Architecture Design
 ### Jungil Kong, Jihoon Park, Beomjeong Kim, Jeongmin Kim, Dohee Kong, Sangjin Kim 
 Unofficial implementation of the [VITS2 paper](https://arxiv.org/abs/2307.16430), sequel to [VITS paper](https://arxiv.org/abs/2106.06103). (thanks to the authors for their work!)
 
-![Alt text](image.png)
+![Alt text](resources/image.png)
 
 Single-stage text-to-speech models have been actively studied recently, and their results have outperformed two-stage pipeline systems. Although the previous single-stage model has made great progress, there is room for improvement in terms of its intermittent unnaturalness, computational efficiency, and strong dependence on phoneme conversion. In this work, we introduce VITS2, a single-stage text-to-speech model that efficiently synthesizes a more natural speech by improving several aspects of the previous work. We propose improved structures and training mechanisms and present that the proposed methods are effective in improving naturalness, similarity of speech characteristics in a multi-speaker model, and efficiency of training and inference. Furthermore, we demonstrate that the strong dependence on phoneme conversion in previous works can be significantly reduced with our method, which allows a fully end-toend single-stage approach.
 
@@ -97,6 +101,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ## Updates, TODOs, features and notes
     note - duration predictor is not adversarial yet. In my earlier experiments with VITS-1, I used deterministic duration predictor (no-sdp) and found that it is quite good. So, I am not sure if adversarial duration predictor is necessary. But, I will add it sooner or later if it is necessary. Also, I want to combine parallel tacotron-2 and naturalspeech-1's learnable upsampling layer to remove MAS completely for E2E differentiable model.
 
+- (08/20/2023) update 1 - Added sample audio @42k steps.
 - (08/17/2023) update 5 - Does not support pytorch2.0 anymore. Please use pytorch1.13.1 ( I tried on Google Colab and it works fine; will update with a Colab notebook soon!)
 - (08/17/2023) update 4  - Fixed multi-spk DataLoader
 - (08/17/2023) update 3 - QOL changes to generate mel spec from existing lin spec. Updated inference.ipynb.
