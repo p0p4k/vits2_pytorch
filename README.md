@@ -2,8 +2,9 @@
 [Most of the code is ready and the model is ready to train. Hopefully, someone from the community can share some results ASAP! Thanks!]
 
 # Sample audio
-- Training is in progress. Below is a sample @42k steps. (08/20/2023)
-![test.wav](resources/test.wav)
+(Training is in progress.) 
+- (08/20/2023) - Added sample audio @42k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
+- [vietnamese samples](https://github.com/p0p4k/vits2_pytorch/pull/10#issuecomment-1682307529) Thanks to @ductho9799(https://github.com/ductho9799) for sharing!
 
 # VITS2: Improving Quality and Efficiency of Single-Stage Text-to-Speech with Adversarial Learning and Architecture Design
 ### Jungil Kong, Jihoon Park, Beomjeong Kim, Jeongmin Kim, Dohee Kong, Sangjin Kim 
@@ -22,7 +23,7 @@ Single-stage text-to-speech models have been actively studied recently, and thei
 
 ## pre-requisites
 1. Python >= 3.6
-2. ~Now supports Pytorch version 2.0~ (08/17/2023) - Tested on Pytorch version 1.13.1 with Google Colab
+2. ~Now supports Pytorch version 2.0~ (08/17/2023) - Tested on Pytorch version 1.13.1 with Google Colab and LambdaLabs cloud.
 3. Clone this repository
 4. Install python requirements. Please refer [requirements.txt](requirements.txt)
     1. You may need to install espeak first: `apt-get install espeak`
