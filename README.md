@@ -3,7 +3,7 @@
 
 # Sample audio
 (Training is in progress.) 
-- (08/20/2023) - Added sample audio @42k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
+- (08/20/2023) - Added sample audio @104k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
 - [vietnamese samples](https://github.com/p0p4k/vits2_pytorch/pull/10#issuecomment-1682307529) Thanks to [@ductho9799](https://github.com/ductho9799) for sharing!
 
 # VITS2: Improving Quality and Efficiency of Single-Stage Text-to-Speech with Adversarial Learning and Architecture Design
@@ -102,7 +102,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ## Updates, TODOs, features and notes
     note - duration predictor is not adversarial yet. In my earlier experiments with VITS-1, I used deterministic duration predictor (no-sdp) and found that it is quite good. So, I am not sure if adversarial duration predictor is necessary. But, I will add it sooner or later if it is necessary. Also, I want to combine parallel tacotron-2 and naturalspeech-1's learnable upsampling layer to remove MAS completely for E2E differentiable model.
 
-- (08/20/2023) update 1 - Added sample audio @42k steps.
+- (08/20/2023) update 1 - Added sample audio @104k steps.
 - (08/17/2023) update 5 - Does not support pytorch2.0 anymore. Please use pytorch1.13.1 ( I tried on Google Colab and it works fine; will update with a Colab notebook soon!)
 - (08/17/2023) update 4  - Fixed multi-spk DataLoader
 - (08/17/2023) update 3 - QOL changes to generate mel spec from existing lin spec. Updated inference.ipynb.
