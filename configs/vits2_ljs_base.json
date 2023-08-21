@@ -39,6 +39,7 @@
       "transformer_flow_type": "pre_conv",
       "use_spk_conditioned_encoder": false,
       "use_noise_scaled_mas": true,
+      "use_duration_discriminator": false,
       "inter_channels": 192,
       "hidden_channels": 192,
       "filter_channels": 768,

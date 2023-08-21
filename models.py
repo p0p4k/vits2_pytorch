@@ -94,26 +94,6 @@ class StochasticDurationPredictor(nn.Module):
       logw = z0
       return logw
 
-class DurationDiscriminator(nn.Module):
-  def __init__(self, input_dim, hidden_dim, num_layers=2):
-    super(DurationDiscriminator, self).__init__()
-    self.input_dim = input_dim
-    self.hidden_dim = hidden_dim
-    self.num_layers = num_layers
-    self.lstm = nn.LSTM(input_size=input_dim, hidden_size=hidden_dim, num_layers=num_layers, batch_first=True)
-    self.output_layer = nn.Sequential(
-        nn.Linear(hidden_dim, 1), 
-        nn.Sigmoid() 
-    )
-
-  def forward(self, x, durs):
-    assert x.size(-1) + durs.size(-1) == self.input_dim, "Input dimensions mismatch for Duration Discriminator!"
-    combined_input = torch.cat((x, durs), dim=-1)
-    lstm_out, _ = self.lstm(combined_input)
-    last_output = lstm_out[:, -1, :]
-    discriminator_output = self.output_layer(last_output)
-    return discriminator_output
-
 class DurationPredictor(nn.Module):
   def __init__(self, in_channels, filter_channels, kernel_size, p_dropout, gin_channels=0):
     super().__init__()
@@ -150,7 +130,75 @@ class DurationPredictor(nn.Module):
     x = self.proj(x * x_mask)
     return x * x_mask
 
+class DurationDiscriminator(nn.Module): #vits2
+  # TODO : not using "spk conditioning" for now according to the paper.
+  # Can be a better discriminator if we use it.
+  def __init__(self, in_channels, filter_channels, kernel_size, p_dropout, gin_channels=0):
+    super().__init__()
 
+    self.in_channels = in_channels
+    self.filter_channels = filter_channels
+    self.kernel_size = kernel_size
+    self.p_dropout = p_dropout
+    self.gin_channels = gin_channels
+
+    self.drop = nn.Dropout(p_dropout)
+    self.conv_1 = nn.Conv1d(in_channels, filter_channels, kernel_size, padding=kernel_size//2)
+    self.norm_1 = modules.LayerNorm(filter_channels)
+    self.conv_2 = nn.Conv1d(filter_channels, filter_channels, kernel_size, padding=kernel_size//2)
+    self.norm_2 = modules.LayerNorm(filter_channels)
+    self.dur_proj = nn.Conv1d(1, filter_channels, 1)
+
+    self.pre_out_conv_1 = nn.Conv1d(2*filter_channels, filter_channels, kernel_size, padding=kernel_size//2)
+    self.pre_out_norm_1 = modules.LayerNorm(filter_channels)
+    self.pre_out_conv_2 = nn.Conv1d(filter_channels, filter_channels, kernel_size, padding=kernel_size//2)
+    self.pre_out_norm_2 = modules.LayerNorm(filter_channels)
+
+    # if gin_channels != 0:
+    #   self.cond = nn.Conv1d(gin_channels, in_channels, 1)
+
+    self.output_layer = nn.Sequential(
+        nn.Linear(filter_channels, 1), 
+        nn.Sigmoid() 
+    )
+
+  def forward_probability(self, x, x_mask, dur, g=None):
+    dur = self.dur_proj(dur)
+    x = torch.cat([x, dur], dim=1)
+    x = self.pre_out_conv_1(x * x_mask)
+    x = torch.relu(x)
+    x = self.pre_out_norm_1(x)
+    x = self.drop(x)
+    x = self.pre_out_conv_2(x * x_mask)
+    x = torch.relu(x)
+    x = self.pre_out_norm_2(x)
+    x = self.drop(x)
+    x = x * x_mask
+    x = x.transpose(1, 2)
+    output_prob = self.output_layer(x)
+    return output_prob
+
+  def forward(self, x, x_mask, dur_r, dur_hat, g=None):
+    x = torch.detach(x)
+    # if g is not None:
+    #   g = torch.detach(g)
+    #   x = x + self.cond(g)
+    x = self.conv_1(x * x_mask)
+    x = torch.relu(x)
+    x = self.norm_1(x)
+    x = self.drop(x)
+    x = self.conv_2(x * x_mask)
+    x = torch.relu(x)
+    x = self.norm_2(x)
+    x = self.drop(x)
+    
+    output_probs = []
+    for dur in [dur_r, dur_hat]:
+      output_prob = self.forward_probability(x, x_mask, dur, g)
+      output_probs.append(output_prob)
+    
+    return output_probs
+  
 class TextEncoder(nn.Module):
   def __init__(self,
       n_vocab,
@@ -196,7 +244,7 @@ class TextEncoder(nn.Module):
     m, logs = torch.split(stats, self.out_channels, dim=1)
     return x, m, logs, x_mask
 
-class ResidualCouplingTransformersLayer(nn.Module):
+class ResidualCouplingTransformersLayer(nn.Module): #vits2
   def __init__(
       self,
       channels,
@@ -279,7 +327,7 @@ class ResidualCouplingTransformersLayer(nn.Module):
           x = torch.cat([x0, x1], 1)
           return x
 
-class FFTransformerCouplingLayer(nn.Module):
+class FFTransformerCouplingLayer(nn.Module): #vits2
   def __init__(self,
       channels,
       hidden_channels,
@@ -337,7 +385,7 @@ class FFTransformerCouplingLayer(nn.Module):
       x = torch.cat([x0, x1], 1)
       return x
 
-class MonoTransformerFlowLayer(nn.Module):
+class MonoTransformerFlowLayer(nn.Module): #vits2
   def __init__(
       self,
       channels,
@@ -385,7 +433,7 @@ class MonoTransformerFlowLayer(nn.Module):
         x = torch.cat([x0, x1], 1)
         return x
         
-class ResidualCouplingTransformersBlock(nn.Module):
+class ResidualCouplingTransformersBlock(nn.Module): #vits2
   def __init__(self,
       channels,
       hidden_channels,
@@ -410,20 +458,64 @@ class ResidualCouplingTransformersBlock(nn.Module):
     if use_transformer_flows:
       if transformer_flow_type == "pre_conv":
         for i in range(n_flows):
-          self.flows.append(ResidualCouplingTransformersLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+          self.flows.append(
+             ResidualCouplingTransformersLayer(
+             channels, 
+             hidden_channels, 
+             kernel_size, 
+             dilation_rate, 
+             n_layers, 
+             gin_channels=gin_channels, 
+             mean_only=True
+             )
+             )
           self.flows.append(modules.Flip())
       elif transformer_flow_type == "fft":
          for i in range(n_flows):
-          self.flows.append(FFTransformerCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+          self.flows.append(
+             FFTransformerCouplingLayer(
+             channels, 
+             hidden_channels, 
+             kernel_size, 
+             dilation_rate, 
+             n_layers, 
+             gin_channels=gin_channels, 
+             mean_only=True
+             )
+             )
           self.flows.append(modules.Flip())
       elif transformer_flow_type == "mono_layer":
-        self.flows.append(MonoTransformerFlowLayer(channels, hidden_channels, mean_only=True))
+        self.flows.append(
+           MonoTransformerFlowLayer(
+           channels, hidden_channels, mean_only=True
+           )
+           )
         for i in range(n_flows):
-          self.flows.append(modules.ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+          self.flows.append(
+             modules.ResidualCouplingLayer(
+             channels, 
+             hidden_channels, 
+             kernel_size, 
+             dilation_rate, 
+             n_layers, 
+             gin_channels=gin_channels, 
+             mean_only=True
+             )
+             )
           self.flows.append(modules.Flip())
     else:
       for i in range(n_flows):
-        self.flows.append(modules.ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+        self.flows.append(
+           modules.ResidualCouplingLayer(
+           channels, 
+           hidden_channels,
+           kernel_size, 
+           dilation_rate, 
+           n_layers, 
+           gin_channels=gin_channels, 
+           mean_only=True
+           )
+           )
         self.flows.append(modules.Flip())
 
   def forward(self, x, x_mask, g=None, reverse=False):
@@ -455,7 +547,17 @@ class ResidualCouplingBlock(nn.Module):
 
     self.flows = nn.ModuleList()
     for i in range(n_flows):
-      self.flows.append(modules.ResidualCouplingLayer(channels, hidden_channels, kernel_size, dilation_rate, n_layers, gin_channels=gin_channels, mean_only=True))
+      self.flows.append(
+         modules.ResidualCouplingLayer(
+         channels, 
+         hidden_channels, 
+         kernel_size, 
+         dilation_rate, 
+         n_layers, 
+         gin_channels=gin_channels, 
+         mean_only=True
+         )
+         )
       self.flows.append(modules.Flip())
 
   def forward(self, x, x_mask, g=None, reverse=False):
@@ -698,9 +800,11 @@ class SynthesizerTrn(nn.Module):
     if self.use_transformer_flows:
       assert self.transformer_flow_type in ["pre_conv", "fft", "mono_layer"], "transformer_flow_type must be one of ['pre_conv', 'fft','mono_layer']"
     self.use_sdp = use_sdp
+    # self.use_duration_discriminator = kwargs.get("use_duration_discriminator", False)
     self.use_noise_scaled_mas = kwargs.get("use_noise_scaled_mas", False)
     self.mas_noise_scale_initial = kwargs.get("mas_noise_scale_initial", 0.01)
     self.noise_scale_delta = kwargs.get("noise_scale_delta", 2e-6)
+
     self.current_mas_noise_scale = self.mas_noise_scale_initial
     if self.use_spk_conditioned_encoder and gin_channels > 0:
        self.enc_gin_channels = gin_channels
@@ -772,14 +876,14 @@ class SynthesizerTrn(nn.Module):
       logw_ = torch.log(w + 1e-6) * x_mask
       logw = self.dp(x, x_mask, g=g)
       l_length = torch.sum((logw - logw_)**2, [1,2]) / torch.sum(x_mask) # for averaging 
-
+       
     # expand prior
     m_p = torch.matmul(attn.squeeze(1), m_p.transpose(1, 2)).transpose(1, 2)
     logs_p = torch.matmul(attn.squeeze(1), logs_p.transpose(1, 2)).transpose(1, 2)
 
     z_slice, ids_slice = commons.rand_slice_segments(z, y_lengths, self.segment_size)
     o = self.dec(z_slice, g=g)
-    return o, l_length, attn, ids_slice, x_mask, y_mask, (z, z_p, m_p, logs_p, m_q, logs_q)
+    return o, l_length, attn, ids_slice, x_mask, y_mask, (z, z_p, m_p, logs_p, m_q, logs_q), (logw, logw_)
 
   def infer(self, x, x_lengths, sid=None, noise_scale=1, length_scale=1, noise_scale_w=1., max_len=None):
     x, m_p, logs_p, x_mask = self.enc_p(x, x_lengths)

@@ -72,6 +72,7 @@ net_g = SynthesizerTrn(
     transformer_flow_type="fft", # <--- vits2 parameter (choose from "pre_conv","fft","mono_layer")
     use_spk_conditioned_encoder=True, # <--- vits2 parameter
     use_noise_scaled_mas=True, # <--- vits2 parameter
+    use_duration_discriminator=True, # <--- vits2 parameter
 )
 
 x = torch.LongTensor([[1, 2, 3],[4, 5, 6]]) # token ids
@@ -100,8 +101,8 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ```
 
 ## Updates, TODOs, features and notes
-    note - duration predictor is not adversarial yet. In my earlier experiments with VITS-1, I used deterministic duration predictor (no-sdp) and found that it is quite good. So, I am not sure if adversarial duration predictor is necessary. But, I will add it sooner or later if it is necessary. Also, I want to combine parallel tacotron-2 and naturalspeech-1's learnable upsampling layer to remove MAS completely for E2E differentiable model.
 
+- (08/22/2023) update 1 - Added Adverserial DurationDiscriminator using Conv layers (thanks to the authors for guidance). Updated notebook and train scripts. Will test andd update a training run soon.
 - (08/20/2023) update 1 - Added sample audio @104k steps.
 - (08/17/2023) update 5 - Does not support pytorch2.0 anymore. Please use pytorch1.13.1 ( I tried on Google Colab and it works fine; will update with a Colab notebook soon!)
 - (08/17/2023) update 4  - Fixed multi-spk DataLoader
@@ -120,12 +121,12 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 
 #### Duration predictor (fig 1a) 
 - [x] Added LSTM discriminator to duration predictor in notebook.
-- [ ] Added adversarial loss to duration predictor (TODO)
+- [x] Added adversarial loss to duration predictor. ("use_duration_discriminator" flag in config file; default is "False")
 - [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification (Section 2.2)
 - [x] Added "use_noise_scaled_mas" flag in config file. Choose from True or False; updates noise while training based on number of steps and never goes below 0.0
 - [x] Update models.py/train.py/train_ms.py
 - [x] Update config files (vits2_vctk_base.json; vits2_ljs_base.json)
-- [ ] Update losses.py (TODO)
+- [x] Update losses in train.py and train_ms.py
 #### Transformer block in the normalizing flow (fig 1b)
 - [x] Added transformer block to the normalizing flow in notebook. There are three types of transformer blocks: pre-convolution (my implementation), FFT (from [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc/commit/fc8336fffd40c39bdb225c1b041ab4dd15fac4e9) repo) and mono-layer.
 - [x] Added "transformer_flow_type" flag in config file. Choose from "pre_conv" or "fft" or "mono_layer".
