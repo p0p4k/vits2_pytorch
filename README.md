@@ -19,7 +19,8 @@ Single-stage text-to-speech models have been actively studied recently, and thei
 - (08-17-2023) - The authors were really kind to guide me through the paper and answer my questions. I am open to discuss any changes or answer questions regarding the implementation. Please feel free to open an issue or contact me directly.
 
 ## Jupyter Notebook for initial experiments
-- [x] check the 'notebooks' folder
+- [x] check the 'notebooks' folder for my initial implemntations of the modules.
+- [x] contains Google Colab notebook for training LJ Speech dataset as an example.
 
 ## pre-requisites
 1. Python >= 3.6
@@ -94,7 +95,9 @@ net_g(
 ```sh
 # LJ Speech
 # python train.py -c configs/vits2_ljs_base.json -m ljs_base
-python train.py -c configs/vits2_ljs_nosdp.json -m ljs_base # no-sdp; suggested till adversarial duration predictor is added
+python train.py -c configs/vits2_ljs_nosdp.json -m ljs_base # no-sdp; 
+# added adverserial duration predictor (08/22/2023)
+python train.py -c configs/vits2_ljs_base.json -m ljs_base # with sdp;
 
 # VCTK
 python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
@@ -102,7 +105,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 
 ## Updates, TODOs, features and notes
 
-- (08/22/2023) update 2 - Fixed DurationDiscriminator backward pass. Fixed typos and requirements.txt. Will train on LambdaLabs cloud and update the code if any errors.
+- (08/22/2023) update 2 - Fixed DurationDiscriminator backward pass. Fixed typos and requirements.txt. Will train on LambdaLabs cloud and update the code if any errors. Added Google Colab notebook for training in the 'notebooks' folder.
 - (08/22/2023) update 1 - Added Adverserial DurationDiscriminator using Conv layers (thanks to the authors for guidance). Updated notebook and train scripts. Will test andd update a training run soon.
 - (08/20/2023) update 1 - Added sample audio @104k steps.
 - (08/17/2023) update 5 - Does not support pytorch2.0 anymore. Please use pytorch1.13.1 ( I tried on Google Colab and it works fine; will update with a Colab notebook soon!)
