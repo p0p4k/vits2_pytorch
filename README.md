@@ -102,6 +102,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 
 ## Updates, TODOs, features and notes
 
+- (08/22/2023) update 2 - Fixed DurationDiscriminator backward pass. Fixed typos and requirements.txt. Will train on LambdaLabs cloud and update the code if any errors.
 - (08/22/2023) update 1 - Added Adverserial DurationDiscriminator using Conv layers (thanks to the authors for guidance). Updated notebook and train scripts. Will test andd update a training run soon.
 - (08/20/2023) update 1 - Added sample audio @104k steps.
 - (08/17/2023) update 5 - Does not support pytorch2.0 anymore. Please use pytorch1.13.1 ( I tried on Google Colab and it works fine; will update with a Colab notebook soon!)
@@ -121,7 +122,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 
 #### Duration predictor (fig 1a) 
 - [x] Added LSTM discriminator to duration predictor in notebook.
-- [x] Added adversarial loss to duration predictor. ("use_duration_discriminator" flag in config file; default is "False")
+- [x] Added adversarial loss to duration predictor. ("use_duration_discriminator" flag in config file; default is "True")
 - [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification (Section 2.2)
 - [x] Added "use_noise_scaled_mas" flag in config file. Choose from True or False; updates noise while training based on number of steps and never goes below 0.0
 - [x] Update models.py/train.py/train_ms.py
