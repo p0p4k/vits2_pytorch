@@ -158,7 +158,7 @@ def run(rank, n_gpus, hps):
       eps=hps.train.eps)
   if net_dur_disc is not None:
     optim_dur_disc = torch.optim.AdamW(
-        net_dur_disc.parametrs(),
+        net_dur_disc.parameters(),
         hps.train.learning_rate,
         betas=hps.train.betas,
         eps=hps.train.eps)
