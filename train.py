@@ -260,7 +260,7 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
       
       # Duration Discriminator
       if net_dur_disc is not None:
-        y_dur_hat_r, y_dur_hat_g = net_dur_disc(logw, logw_.detach())
+        y_dur_hat_r, y_dur_hat_g = net_dur_disc(x, x_mask, logw, logw_.detach())
         with autocast(enabled=False):
           # TODO: I think need to mean using the mask, but for now, just mean all
           loss_dur_disc, losses_dur_disc_r, losses_dur_disc_g = discriminator_loss(y_dur_hat_r, y_dur_hat_g)
@@ -281,7 +281,7 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
       # Generator
       y_d_hat_r, y_d_hat_g, fmap_r, fmap_g = net_d(y, y_hat)
       if net_dur_disc is not None:
-        y_dur_hat_r, y_dur_hat_g = net_dur_disc(logw, logw_)
+        y_dur_hat_r, y_dur_hat_g = net_dur_disc(x, x_mask, logw, logw_)
       with autocast(enabled=False):
         loss_dur = torch.sum(l_length.float())
         loss_mel = F.l1_loss(y_mel, y_hat_mel) * hps.train.c_mel
@@ -290,6 +290,10 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
         loss_fm = feature_loss(fmap_r, fmap_g)
         loss_gen, losses_gen = generator_loss(y_d_hat_g)
         loss_gen_all = loss_gen + loss_fm + loss_mel + loss_dur + loss_kl
+        if net_dur_disc is not None:
+          loss_dur_gen, losses_dur_gen = generator_loss(y_dur_hat_g)
+          loss_gen_all += loss_dur_gen
+        
     optim_g.zero_grad()
     scaler.scale(loss_gen_all).backward()
     scaler.unscale_(optim_g)
@@ -318,6 +322,7 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
         if net_dur_disc is not None:
           scalar_dict.update({f"loss/dur_disc_r/{losses_dur_disc_r}"})
           scalar_dict.update({f"loss/dur_disc_g/{losses_dur_disc_g}"})
+          scalar_dict.update({f"loss/dur_gen/{loss_dur_gen}"})
 
         image_dict = { 
             "slice/mel_org": utils.plot_spectrogram_to_numpy(y_mel[0].data.cpu().numpy()),
