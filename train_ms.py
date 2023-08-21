@@ -7,8 +7,8 @@ import torch
 from torch import nn, optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-# from torch.utils.tensorboard import SummaryWriter
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
+# from tensorboardX import SummaryWriter
 import torch.multiprocessing as mp
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -317,10 +317,10 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
         scalar_dict.update({"loss/d_r/{}".format(i): v for i, v in enumerate(losses_disc_r)})
         scalar_dict.update({"loss/d_g/{}".format(i): v for i, v in enumerate(losses_disc_g)})
         
-        if net_dur_disc is not None:
-          scalar_dict.update({"loss/dur_disc_r" : f"{losses_dur_disc_r}"})
-          scalar_dict.update({"loss/dur_disc_g" : f"{losses_dur_disc_g}"})
-          scalar_dict.update({"loss/dur_gen" : f"{loss_dur_gen}"})
+        # if net_dur_disc is not None:
+        #   scalar_dict.update({"loss/dur_disc_r" : f"{losses_dur_disc_r}"})
+        #   scalar_dict.update({"loss/dur_disc_g" : f"{losses_dur_disc_g}"})
+        #   scalar_dict.update({"loss/dur_gen" : f"{loss_dur_gen}"})
 
         image_dict = { 
             "slice/mel_org": utils.plot_spectrogram_to_numpy(y_mel[0].data.cpu().numpy()),
