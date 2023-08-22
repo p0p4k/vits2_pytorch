@@ -95,8 +95,8 @@ net_g(
 ```sh
 # LJ Speech
 # python train.py -c configs/vits2_ljs_base.json -m ljs_base
-python train.py -c configs/vits2_ljs_nosdp.json -m ljs_base # no-sdp; 
-# added adverserial duration predictor (08/22/2023)
+python train.py -c configs/vits2_ljs_nosdp.json -m ljs_base # no-sdp; (recommended)
+
 python train.py -c configs/vits2_ljs_base.json -m ljs_base # with sdp;
 
 # VCTK
@@ -105,6 +105,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 
 ## Updates, TODOs, features and notes
 
+- (08/22/203) update 3 - fixed missing/uninitialised variables for duration predictor/discriminator. [#14](https://github.com/p0p4k/vits2_pytorch/issues/14)
 - (08/22/2023) update 2 - Fixed DurationDiscriminator backward pass. Fixed typos and requirements.txt. Will train on LambdaLabs cloud and update the code if any errors. Added Google Colab notebook for training in the 'notebooks' folder.
 - (08/22/2023) update 1 - Added Adverserial DurationDiscriminator using Conv layers (thanks to the authors for guidance). Updated notebook and train scripts. Will test andd update a training run soon.
 - (08/20/2023) update 1 - Added sample audio @104k steps.
