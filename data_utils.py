@@ -186,6 +186,9 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         self.win_length     = hparams.win_length
         self.sampling_rate  = hparams.sampling_rate
 
+        self.use_mel_spec_posterior = getattr(hparams, "use_mel_posterior_encoder", False)
+        if self.use_mel_spec_posterior:
+            self.n_mel_channels = getattr(hparams, "n_mel_channels", 80)
         self.cleaned_text = getattr(hparams, "cleaned_text", False)
 
         self.add_blank = hparams.add_blank
