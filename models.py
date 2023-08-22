@@ -872,6 +872,8 @@ class SynthesizerTrn(nn.Module):
     if self.use_sdp:
       l_length = self.dp(x, x_mask, w, g=g)
       l_length = l_length / torch.sum(x_mask)
+      logw = self.dp(x, x_mask, g=g, reverse=True, noise_scale=1.)
+      logw_ = torch.log(w + 1e-6) * x_mask
     else:
       logw_ = torch.log(w + 1e-6) * x_mask
       logw = self.dp(x, x_mask, g=g)
