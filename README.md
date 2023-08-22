@@ -1,5 +1,6 @@
-~[this is a work in progress, feel free to contribute! Model will be ready if this line is removed]~
-[Most of the code is ready and the model is ready to train. Hopefully, someone from the community can share some results ASAP! Thanks!]
+# Pretrained checkpoints (proof that training works!)
+- [LJSpeech-no-sdp](https://drive.google.com/drive/folders/1U-1EqBMXqmEqK0aUhbCJOquowbvKkLmc?usp=sharing) (refer to config.yaml in this checkppoint folder)
+Would recommend experts to rename the ckpts to *_0.pth and starting the training using transfer learning. (I will add a notebook for this soon to help beginers).
 
 # Sample audio
 (Training is in progress.) 
@@ -103,6 +104,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 
 ## Updates, TODOs, features and notes
 
+- (08/22/2023) update 5 - added pretrained checkpoints @64k steps for ljspeech_no_sdp_config with duration_discriminator.
 - (08/22/2023) update 4 - fixed TextEncoder speaker conditionning [#15](https://github.com/p0p4k/vits2_pytorch/issues/15); added saving dur_disc.pth; disabled fp16 by default as it seems to cause some memory issues for my training.
 - (08/22/203) update 3 - fixed missing/uninitialised variables for duration predictor/discriminator. [#14](https://github.com/p0p4k/vits2_pytorch/issues/14)
 - (08/22/2023) update 2 - Fixed DurationDiscriminator backward pass. Fixed typos and requirements.txt. Will train on LambdaLabs cloud and update the code if any errors. Added Google Colab notebook for training in the 'notebooks' folder.
