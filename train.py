@@ -187,7 +187,7 @@ def run(rank, n_gpus, hps):
     scheduler_dur_disc = torch.optim.lr_scheduler.ExponentialLR(optim_dur_disc, gamma=hps.train.lr_decay, last_epoch=epoch_str-2)
   else:
     scheduler_dur_disc = None
-    
+
   scaler = GradScaler(enabled=hps.train.fp16_run)
 
   for epoch in range(epoch_str, hps.train.epochs + 1):
@@ -345,6 +345,8 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
         evaluate(hps, net_g, eval_loader, writer_eval)
         utils.save_checkpoint(net_g, optim_g, hps.train.learning_rate, epoch, os.path.join(hps.model_dir, "G_{}.pth".format(global_step)))
         utils.save_checkpoint(net_d, optim_d, hps.train.learning_rate, epoch, os.path.join(hps.model_dir, "D_{}.pth".format(global_step)))
+        if net_dur_disc is not None:
+          utils.save_checkpoint(net_dur_disc, optim_dur_disc, hps.train.learning_rate, epoch, os.path.join(hps.model_dir, "DUR_{}.pth".format(global_step)))
     global_step += 1
   
   if rank == 0:
