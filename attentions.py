@@ -36,7 +36,6 @@ class Encoder(nn.Module): #backward compatible vits2 encoder
         self.spk_emb_linear = nn.Linear(self.gin_channels, self.hidden_channels)
         # vits2 says 3rd block, so idx is 2 by default
         self.cond_layer_idx = kwargs['cond_layer_idx'] if 'cond_layer_idx' in kwargs else 2
-        print(self.gin_channels, self.cond_layer_idx)
         assert self.cond_layer_idx < self.n_layers, 'cond_layer_idx should be less than n_layers'
       
     for i in range(self.n_layers):
