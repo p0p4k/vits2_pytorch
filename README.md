@@ -157,7 +157,11 @@ MonoTransformerFlowLayer)
 #### Training scripts
 - [x] Added vits2 flags to train.py (single-speaer model)
 - [x] Added vits2 flags to train_ms.py (multi-speaker model)
-
+#### ONNX export
+- [ ] Add ONNX export support. [TODO]
+#### Gradio Demo
+- [ ] Add Gradio demo support. [TODO]
+  
 ## Special mentions
 - [@erogol](https://github.com/erogol) for quick feedback and guidance. (Please check his awesome [CoquiTTS](https://github.com/coqui-ai/TTS) repo).
 - [@lexkoro](https://github.com/lexkoro) for discussions and help with the prototype training.
