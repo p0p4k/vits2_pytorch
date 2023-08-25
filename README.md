@@ -106,6 +106,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 
 ## Updates, TODOs, features and notes
 
+- (08/25/23) update - fixed mono-layer; thanks to [@lexkoro](https://github.com/lexkoro) for pointing out the bug.
 - (08/24/23) update - Japanese standalone support at this repo [vits2_japanese](https://github.com/tonnetonne814/unofficial-vits2-44100-Ja). Thanks to [@tonnetonne814](https://github.com/tonnetonne814) for sharing.
 - (08/22/2023) update 5 - added pretrained checkpoints @64k steps for ljspeech_no_sdp_config with duration_discriminator.
 - (08/22/2023) update 4 - fixed TextEncoder speaker conditionning [#15](https://github.com/p0p4k/vits2_pytorch/issues/15); added saving dur_disc.pth; disabled fp16 by default as it seems to cause some memory issues for my training.
