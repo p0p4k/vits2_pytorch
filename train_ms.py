@@ -166,6 +166,8 @@ def run(rank, n_gpus, hps):
     
   net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=True)
   net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=True)
+  if net_dur_disc is not None:
+    net_dur_disc = DDP(net_dur_disc, device_ids=[rank], find_unused_parameters=True)
 
   try:
     _, _, _, epoch_str = utils.load_checkpoint(utils.latest_checkpoint_path(hps.model_dir, "G_*.pth"), net_g, optim_g)
