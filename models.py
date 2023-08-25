@@ -485,11 +485,6 @@ class ResidualCouplingTransformersBlock(nn.Module): #vits2
              )
           self.flows.append(modules.Flip())
       elif transformer_flow_type == "mono_layer":
-        self.flows.append(
-           MonoTransformerFlowLayer(
-           channels, hidden_channels, mean_only=True
-           )
-           )
         for i in range(n_flows):
           self.flows.append(
              modules.ResidualCouplingLayer(
@@ -503,6 +498,11 @@ class ResidualCouplingTransformersBlock(nn.Module): #vits2
              )
              )
           self.flows.append(modules.Flip())
+          self.flows.append(
+           MonoTransformerFlowLayer(
+           channels, hidden_channels, mean_only=True
+           )
+           )
     else:
       for i in range(n_flows):
         self.flows.append(
