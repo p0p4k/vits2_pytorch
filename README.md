@@ -10,8 +10,7 @@ Single-stage text-to-speech models have been actively studied recently, and thei
 - We will build this repo based on the [VITS repo](https://github.com/jaywalnut310/vits). The goal is to make this model easier to transfer learning from VITS pretrained model!
 - (08-17-2023) - The authors were really kind to guide me through the paper and answer my questions. I am open to discuss any changes or answer questions regarding the implementation. Please feel free to open an issue or contact me directly.
 
-# Pretrained checkpoints and colab train notebook
-- Google Colab train [notebook](https://colab.research.google.com/drive/12iCPWMpKdekM6F1HujYCh5H8PyzrgJN2?usp=sharing)
+# Pretrained checkpoints
 - [LJSpeech-no-sdp](https://drive.google.com/drive/folders/1U-1EqBMXqmEqK0aUhbCJOquowbvKkLmc?usp=sharing) (refer to config.yaml in this checkppoint folder) | 64k steps | proof that training works!
 Would recommend experts to rename the ckpts to *_0.pth and starting the training using transfer learning. (I will add a notebook for this soon to help beginers).
 - [x] Check 'Discussion' page for training logs and tensorboard links and other community contributions.
@@ -21,7 +20,7 @@ Would recommend experts to rename the ckpts to *_0.pth and starting the training
 - (08/20/2023) - Added sample audio @104k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
 - [vietnamese samples](https://github.com/p0p4k/vits2_pytorch/pull/10#issuecomment-1682307529) Thanks to [@ductho9799](https://github.com/ductho9799) for sharing!
 
-## pre-requisites
+## Prerequisites
 1. Python >= 3.6
 2. ~Now supports Pytorch version 2.0~ (08/17/2023) - Tested on Pytorch version 1.13.1 with Google Colab and LambdaLabs cloud.
 3. Clone this repository
@@ -92,6 +91,7 @@ net_g(
 ```
 
 ## Training Example
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/12iCPWMpKdekM6F1HujYCh5H8PyzrgJN2?usp=sharing)
 ```sh
 # LJ Speech
 python train.py -c configs/vits2_ljs_nosdp.json -m ljs_base # no-sdp; (recommended)
