@@ -20,9 +20,6 @@ Would recommend experts to rename the ckpts to *_0.pth and starting the training
 - (08/20/2023) - Added sample audio @104k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
 - [vietnamese samples](https://github.com/p0p4k/vits2_pytorch/pull/10#issuecomment-1682307529) Thanks to [@ductho9799](https://github.com/ductho9799) for sharing!
 
-## Jupyter Notebook for initial experiments
-- [x] Check out `dev` branch `notebooks` folder for initial experiments.
-
 ## pre-requisites
 1. Python >= 3.6
 2. ~Now supports Pytorch version 2.0~ (08/17/2023) - Tested on Pytorch version 1.13.1 with Google Colab and LambdaLabs cloud.
@@ -106,7 +103,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ## TODOs, features and notes
 
 #### Duration predictor (fig 1a) 
-- [x] Added LSTM discriminator to duration predictor in notebook.
+- [x] Added LSTM discriminator to duration predictor.
 - [x] Added adversarial loss to duration predictor. ("use_duration_discriminator" flag in config file; default is "True")
 - [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification (Section 2.2)
 - [x] Added "use_noise_scaled_mas" flag in config file. Choose from True or False; updates noise while training based on number of steps and never goes below 0.0
@@ -114,7 +111,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 - [x] Update config files (vits2_vctk_base.json; vits2_ljs_base.json)
 - [x] Update losses in train.py and train_ms.py
 #### Transformer block in the normalizing flow (fig 1b)
-- [x] Added transformer block to the normalizing flow in notebook. There are three types of transformer blocks: pre-convolution (my implementation), FFT (from [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc/commit/fc8336fffd40c39bdb225c1b041ab4dd15fac4e9) repo) and mono-layer.
+- [x] Added transformer block to the normalizing flow. There are three types of transformer blocks: pre-convolution (my implementation), FFT (from [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc/commit/fc8336fffd40c39bdb225c1b041ab4dd15fac4e9) repo) and mono-layer.
 - [x] Added "transformer_flow_type" flag in config file. Choose from "pre_conv", "fft", "mono_layer_inter_residual", "mono_layer_post_residual".
 - [x] Added layers and blocks in models.py 
 (ResidualCouplingTransformersLayer, 
@@ -123,11 +120,9 @@ FFTransformerCouplingLayer,
 MonoTransformerFlowLayer)
 - [x] Add in config file (vits2_ljs_base.json; can be turned on using "use_transformer_flows" flag)
 #### Speaker-conditioned text encoder (fig 1c)
-- [x] Added speaker embedding to the text encoder in notebook.
 - [x] Added speaker embedding to the text encoder in models.py (TextEncoder; backward compatible with VITS)
 - [x] Add in config file (vits2_ljs_base.json; can be turned on using "use_spk_conditioned_encoder" flag)
 #### Mel spectrogram posterior encoder (Section 3)
-- [x] Added mel spectrogram posterior encoder in notebook.
 - [x] Added mel spectrogram posterior encoder in train.py 
 - [x] Addded new config file (vits2_ljs_base.json; can be turned on using "use_mel_posterior_encoder" flag)
 - [x] Updated 'data_utils.py' to use the "use_mel_posterior_encoder" flag for vits2
