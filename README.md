@@ -7,7 +7,7 @@ Unofficial implementation of the [VITS2 paper](https://arxiv.org/abs/2307.16430)
 Single-stage text-to-speech models have been actively studied recently, and their results have outperformed two-stage pipeline systems. Although the previous single-stage model has made great progress, there is room for improvement in terms of its intermittent unnaturalness, computational efficiency, and strong dependence on phoneme conversion. In this work, we introduce VITS2, a single-stage text-to-speech model that efficiently synthesizes a more natural speech by improving several aspects of the previous work. We propose improved structures and training mechanisms and present that the proposed methods are effective in improving naturalness, similarity of speech characteristics in a multi-speaker model, and efficiency of training and inference. Furthermore, we demonstrate that the strong dependence on phoneme conversion in previous works can be significantly reduced with our method, which allows a fully end-toend single-stage approach.
 
 ## Credits
-- We will build this repo based on the [VITS repo](https://github.com/jaywalnut310/vits). Currently I am adding vits2 changes in the 'notebooks' folder. The goal is to make this model easier to transfer learning from VITS pretrained model!
+- We will build this repo based on the [VITS repo](https://github.com/jaywalnut310/vits). The goal is to make this model easier to transfer learning from VITS pretrained model!
 - (08-17-2023) - The authors were really kind to guide me through the paper and answer my questions. I am open to discuss any changes or answer questions regarding the implementation. Please feel free to open an issue or contact me directly.
 
 # Pretrained checkpoints 
@@ -105,7 +105,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 #### Duration predictor (fig 1a) 
 - [x] Added LSTM discriminator to duration predictor.
 - [x] Added adversarial loss to duration predictor. ("use_duration_discriminator" flag in config file; default is "True")
-- [x] Monotonic Alignment Search with Gaussian Noise added in 'notebooks' folder; need expert verification (Section 2.2)
+- [x] Monotonic Alignment Search with Gaussian Noise added; might need expert verification (Section 2.2)
 - [x] Added "use_noise_scaled_mas" flag in config file. Choose from True or False; updates noise while training based on number of steps and never goes below 0.0
 - [x] Update models.py/train.py/train_ms.py
 - [x] Update config files (vits2_vctk_base.json; vits2_ljs_base.json)
