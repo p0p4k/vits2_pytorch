@@ -391,6 +391,8 @@ class MonoTransformerFlowLayer(nn.Module): #vits2
       channels,
       hidden_channels,
       mean_only=False,
+      residual_connection=False,
+      #according to VITS-2 paper fig 1B set residual_connection=True
   ):
     assert channels % 2 == 0, "channels should be divisible by 2"
     super().__init__()
@@ -398,6 +400,7 @@ class MonoTransformerFlowLayer(nn.Module): #vits2
     self.hidden_channels = hidden_channels
     self.half_channels = channels // 2
     self.mean_only = mean_only
+    self.residual_connection = residual_connection
     #vits2
     self.pre_transformer = attentions.Encoder(
         self.half_channels,
@@ -414,24 +417,56 @@ class MonoTransformerFlowLayer(nn.Module): #vits2
     self.post.bias.data.zero_()
 
   def forward(self, x, x_mask, g=None, reverse=False):
-    x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
-    x0_ = self.pre_transformer(x0 * x_mask, x_mask) #vits2
-    h = x0_ + x0 #vits2
-    stats = self.post(h) * x_mask
-    if not self.mean_only:
-        m, logs = torch.split(stats, [self.half_channels] * 2, 1)
-    else:
-        m = stats
-        logs = torch.zeros_like(m)
-    if not reverse:
+    if self.residual_connection:
+      if not reverse:
+        x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
+        x0_ = x0 * x_mask
+        x0_ = self.pre_transformer(x0, x_mask) #vits2
+        stats = self.post(x0_) * x_mask
+        if not self.mean_only:
+          m, logs = torch.split(stats, [self.half_channels] * 2, 1)
+        else:
+          m = stats
+          logs = torch.zeros_like(m)
         x1 = m + x1 * torch.exp(logs) * x_mask
-        x = torch.cat([x0, x1], 1)
-        logdet = torch.sum(logs, [1, 2])
+        x_ = torch.cat([x0, x1], 1)
+        x = x + x_
+        logdet = torch.sum(torch.log(torch.exp(logs) + 1), [1, 2])
+        logdet = logdet + torch.log(torch.tensor(2)) * (x0.shape[1]* x0.shape[2])
         return x, logdet
-    else:
-        x1 = (x1 - m) * torch.exp(-logs) * x_mask
-        x = torch.cat([x0, x1], 1)
+      else:
+        x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
+        x0 = x0/2 
+        x0_ = x0 * x_mask
+        x0_ = self.pre_transformer(x0, x_mask) #vits2
+        stats = self.post(x0_) * x_mask
+        if not self.mean_only:
+          m, logs = torch.split(stats, [self.half_channels] * 2, 1)
+        else:
+          m = stats
+          logs = torch.zeros_like(m)
+        x1_ = ((x1 - m) / (1 + torch.exp(-logs))) * x_mask
+        x = torch.cat([x0, x1_], 1)
         return x
+    else:
+      x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
+      x0_ = self.pre_transformer(x0 * x_mask, x_mask) #vits2
+      h = x0_ + x0 #vits2
+      stats = self.post(h) * x_mask
+      if not self.mean_only:
+          m, logs = torch.split(stats, [self.half_channels] * 2, 1)
+      else:
+          m = stats
+          logs = torch.zeros_like(m)
+      if not reverse:
+          x1 = m + x1 * torch.exp(logs) * x_mask
+          x_ = torch.cat([x0, x1], 1)
+          logdet = torch.sum(logs, [1, 2])
+          return x, logdet
+      else:
+          x1 = (x1 - m) * torch.exp(-logs) * x_mask
+          x = torch.cat([x0, x1], 1)
+          return x
         
 class ResidualCouplingTransformersBlock(nn.Module): #vits2
   def __init__(self,
