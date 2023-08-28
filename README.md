@@ -73,7 +73,8 @@ net_g = SynthesizerTrn(
     gin_channels=0,
     use_sdp=True, 
     use_transformer_flows=True, # <--- vits2 parameter
-    transformer_flow_type="fft", # <--- vits2 parameter (choose from "pre_conv","fft","mono_layer")
+    # (choose from "pre_conv", "fft", "mono_layer_inter_residual", "mono_layer_post_residual")
+    transformer_flow_type="fft", # <--- vits2 parameter 
     use_spk_conditioned_encoder=True, # <--- vits2 parameter
     use_noise_scaled_mas=True, # <--- vits2 parameter
     use_duration_discriminator=True, # <--- vits2 parameter
@@ -106,7 +107,8 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 
 ## Updates, TODOs, features and notes
 
-- (08/28/23) update - added residual connection after the transformer flow block according to fig 1b. Right now the flag is false by default, but can be turned on in models.py under MonoTransformerFlowLayer. Check notebooks for verification of the implementation.
+- (08/28/23) update 2 - updated flags for flow layers. (choose from "pre_conv", "fft", "mono_layer_inter_residual", "mono_layer_post_residual").
+- (08/28/23) update 1 - added residual connection after the transformer flow block according to fig 1b. Right now the flag is false by default, but can be turned on in models.py under MonoTransformerFlowLayer. Check notebooks for verification of the implementation.
 - (08/25/23) update - fixed mono-layer; thanks to [@lexkoro](https://github.com/lexkoro) for pointing out the bug.
 - (08/24/23) update - Japanese standalone support at this repo [vits2_japanese](https://github.com/tonnetonne814/unofficial-vits2-44100-Ja). Thanks to [@tonnetonne814](https://github.com/tonnetonne814) for sharing.
 - (08/22/2023) update 5 - added pretrained checkpoints @64k steps for ljspeech_no_sdp_config with duration_discriminator.
@@ -140,7 +142,7 @@ python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 - [x] Update losses in train.py and train_ms.py
 #### Transformer block in the normalizing flow (fig 1b)
 - [x] Added transformer block to the normalizing flow in notebook. There are three types of transformer blocks: pre-convolution (my implementation), FFT (from [so-vits-svc](https://github.com/svc-develop-team/so-vits-svc/commit/fc8336fffd40c39bdb225c1b041ab4dd15fac4e9) repo) and mono-layer.
-- [x] Added "transformer_flow_type" flag in config file. Choose from "pre_conv" or "fft" or "mono_layer".
+- [x] Added "transformer_flow_type" flag in config file. Choose from "pre_conv", "fft", "mono_layer_inter_residual", "mono_layer_post_residual".
 - [x] Added layers and blocks in models.py 
 (ResidualCouplingTransformersLayer, 
 ResidualCouplingTransformersBlock,

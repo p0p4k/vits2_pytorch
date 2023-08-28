@@ -13,6 +13,7 @@ from torch.nn import Conv1d, ConvTranspose1d, AvgPool1d, Conv2d
 from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
 from commons import init_weights, get_padding
 
+AVAILABLE_FLOW_TYPES = ["pre_conv", "fft", "mono_layer_inter_residual", "mono_layer_post_residual"]
 
 class StochasticDurationPredictor(nn.Module):
   def __init__(self, in_channels, filter_channels, kernel_size, p_dropout, n_flows=4, gin_channels=0):
@@ -519,7 +520,7 @@ class ResidualCouplingTransformersBlock(nn.Module): #vits2
              )
             )
           self.flows.append(modules.Flip())
-      elif transformer_flow_type == "mono_layer":
+      elif transformer_flow_type == "mono_layer_inter_residual":
         for i in range(n_flows):
           self.flows.append(
              modules.ResidualCouplingLayer(
@@ -536,6 +537,27 @@ class ResidualCouplingTransformersBlock(nn.Module): #vits2
           self.flows.append(
            MonoTransformerFlowLayer(
            channels, hidden_channels, mean_only=True
+           )
+           )
+      elif transformer_flow_type == "mono_layer_post_residual":
+        for i in range(n_flows):
+          self.flows.append(
+             modules.ResidualCouplingLayer(
+             channels, 
+             hidden_channels, 
+             kernel_size, 
+             dilation_rate, 
+             n_layers, 
+             gin_channels=gin_channels, 
+             mean_only=True,
+
+             )
+            )
+          self.flows.append(modules.Flip())
+          self.flows.append(
+           MonoTransformerFlowLayer(
+           channels, hidden_channels, mean_only=True,
+           residual_connection=True
            )
            )
     else:
@@ -831,9 +853,9 @@ class SynthesizerTrn(nn.Module):
     self.gin_channels = gin_channels
     self.use_spk_conditioned_encoder = kwargs.get("use_spk_conditioned_encoder", False)
     self.use_transformer_flows = kwargs.get("use_transformer_flows", False)
-    self.transformer_flow_type = kwargs.get("transformer_flow_type", "mono_layer")
+    self.transformer_flow_type = kwargs.get("transformer_flow_type", "mono_layer_post_residual")
     if self.use_transformer_flows:
-      assert self.transformer_flow_type in ["pre_conv", "fft", "mono_layer"], "transformer_flow_type must be one of ['pre_conv', 'fft','mono_layer']"
+      assert self.transformer_flow_type in AVAILABLE_FLOW_TYPES, f"transformer_flow_type must be one of {AVAILABLE_FLOW_TYPES}"
     self.use_sdp = use_sdp
     # self.use_duration_discriminator = kwargs.get("use_duration_discriminator", False)
     self.use_noise_scaled_mas = kwargs.get("use_noise_scaled_mas", False)

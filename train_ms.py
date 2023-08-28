@@ -26,6 +26,7 @@ from models import (
   SynthesizerTrn,
   MultiPeriodDiscriminator,
   DurationDiscriminator,
+  AVAILABLE_FLOW_TYPES
 )
 from losses import (
   generator_loss,
@@ -97,7 +98,7 @@ def run(rank, n_gpus, hps):
     use_transformer_flows = True
     transformer_flow_type = hps.model.transformer_flow_type
     print(f"Using transformer flows {transformer_flow_type} for VITS2")
-    assert transformer_flow_type in ["pre_conv", "fft","mono_layer"], "transformer_flow_type must be one of ['pre_conv', 'fft', 'mono_layer']"
+    assert transformer_flow_type in AVAILABLE_FLOW_TYPES, f"transformer_flow_type must be one of {AVAILABLE_FLOW_TYPES}"
   else:
     print("Using normal flows for VITS1")
     use_transformer_flows = False
