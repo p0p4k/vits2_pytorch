@@ -1,13 +1,3 @@
-# Pretrained checkpoints 
-- [LJSpeech-no-sdp](https://drive.google.com/drive/folders/1U-1EqBMXqmEqK0aUhbCJOquowbvKkLmc?usp=sharing) (refer to config.yaml in this checkppoint folder) | 64k steps | proof that training works!
-Would recommend experts to rename the ckpts to *_0.pth and starting the training using transfer learning. (I will add a notebook for this soon to help beginers).
-
-# Sample audio
-(Training is in progress.) 
-- (08/23/2023) - Some samples on non-native EN dataset [discussion page](https://github.com/p0p4k/vits2_pytorch/discussions/18). Thanks to [@athenasaurav](https://github.com/athenasaurav) for using his private GPU resources and dataset!
-- (08/20/2023) - Added sample audio @104k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
-- [vietnamese samples](https://github.com/p0p4k/vits2_pytorch/pull/10#issuecomment-1682307529) Thanks to [@ductho9799](https://github.com/ductho9799) for sharing!
-
 # VITS2: Improving Quality and Efficiency of Single-Stage Text-to-Speech with Adversarial Learning and Architecture Design
 ### Jungil Kong, Jihoon Park, Beomjeong Kim, Jeongmin Kim, Dohee Kong, Sangjin Kim 
 Unofficial implementation of the [VITS2 paper](https://arxiv.org/abs/2307.16430), sequel to [VITS paper](https://arxiv.org/abs/2106.06103). (thanks to the authors for their work!)
@@ -20,10 +10,18 @@ Single-stage text-to-speech models have been actively studied recently, and thei
 - We will build this repo based on the [VITS repo](https://github.com/jaywalnut310/vits). Currently I am adding vits2 changes in the 'notebooks' folder. The goal is to make this model easier to transfer learning from VITS pretrained model!
 - (08-17-2023) - The authors were really kind to guide me through the paper and answer my questions. I am open to discuss any changes or answer questions regarding the implementation. Please feel free to open an issue or contact me directly.
 
-## Jupyter Notebook for initial experiments
-- [x] check the 'notebooks' folder for my initial implemntations of the modules.
-- [x] contains Google Colab notebook for training LJ Speech dataset as an example.
+# Pretrained checkpoints 
+- [LJSpeech-no-sdp](https://drive.google.com/drive/folders/1U-1EqBMXqmEqK0aUhbCJOquowbvKkLmc?usp=sharing) (refer to config.yaml in this checkppoint folder) | 64k steps | proof that training works!
+Would recommend experts to rename the ckpts to *_0.pth and starting the training using transfer learning. (I will add a notebook for this soon to help beginers).
 - [x] Check 'Discussion' page for training logs and tensorboard links and other community contributions.
+
+# Sample audio
+- (08/23/2023) - Some samples on non-native EN dataset [discussion page](https://github.com/p0p4k/vits2_pytorch/discussions/18). Thanks to [@athenasaurav](https://github.com/athenasaurav) for using his private GPU resources and dataset!
+- (08/20/2023) - Added sample audio @104k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
+- [vietnamese samples](https://github.com/p0p4k/vits2_pytorch/pull/10#issuecomment-1682307529) Thanks to [@ductho9799](https://github.com/ductho9799) for sharing!
+
+## Jupyter Notebook for initial experiments
+- [x] Check out `dev` branch `notebooks` folder for initial experiments.
 
 ## pre-requisites
 1. Python >= 3.6
@@ -105,32 +103,7 @@ python train.py -c configs/vits2_ljs_base.json -m ljs_base # with sdp;
 python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
 ```
 
-## Updates, TODOs, features and notes
-
-- (08/28/23) update 2 - updated flags for flow layers. (choose from "pre_conv", "fft", "mono_layer_inter_residual", "mono_layer_post_residual").
-- (08/28/23) update 1 - added residual connection after the transformer flow block according to fig 1b. Right now the flag is false by default, but can be turned on in models.py under MonoTransformerFlowLayer. Check notebooks for verification of the implementation.
-- (08/25/23) update - fixed mono-layer; thanks to [@lexkoro](https://github.com/lexkoro) for pointing out the bug.
-- (08/24/23) update - Japanese standalone support at this repo [vits2_japanese](https://github.com/tonnetonne814/unofficial-vits2-44100-Ja). Thanks to [@tonnetonne814](https://github.com/tonnetonne814) for sharing.
-- (08/22/2023) update 5 - added pretrained checkpoints @64k steps for ljspeech_no_sdp_config with duration_discriminator.
-- (08/22/2023) update 4 - fixed TextEncoder speaker conditionning [#15](https://github.com/p0p4k/vits2_pytorch/issues/15); added saving dur_disc.pth; disabled fp16 by default as it seems to cause some memory issues for my training.
-- (08/22/203) update 3 - fixed missing/uninitialised variables for duration predictor/discriminator. [#14](https://github.com/p0p4k/vits2_pytorch/issues/14)
-- (08/22/2023) update 2 - Fixed DurationDiscriminator backward pass. Fixed typos and requirements.txt. Will train on LambdaLabs cloud and update the code if any errors. Added Google Colab notebook for training in the 'notebooks' folder.
-- (08/22/2023) update 1 - Added Adverserial DurationDiscriminator using Conv layers (thanks to the authors for guidance). Updated notebook and train scripts. Will test andd update a training run soon.
-- (08/20/2023) update 1 - Added sample audio @104k steps.
-- (08/17/2023) update 5 - Does not support pytorch2.0 anymore. Please use pytorch1.13.1 ( I tried on Google Colab and it works fine; will update with a Colab notebook soon!)
-- (08/17/2023) update 4  - Fixed multi-spk DataLoader
-- (08/17/2023) update 3 - QOL changes to generate mel spec from existing lin spec. Updated inference.ipynb.
-- (08/17/2023) update 2 - hotfix for "use_mel_posterior_encoder" flag in config file. Should fix [#8](https://github.com/p0p4k/vits2_pytorch/issues/8) and [#9](https://github.com/p0p4k/vits2_pytorch/issues/9). Will do a if-else cleanup later.
-- (08/17/2023) update 1 - After some discussions with the authors, I implemented "mono-layer" transformer flow which seems to be the closest to what they intend. It is a single layer transformer flow used as the first layer before the traditional conv-residual-flows. Need to experiment to check the best transformer flow type of the three. (pre_conv, fft, mono_layer). But, each of the layers serves similar purpose of long range dependency using attention.
-- (08/10/2023) update 1 - updated multi_GPU training, ~support pytorch2.0~ [#5](https://github.com/p0p4k/vits2_pytorch/pull/5)
-- (08/09/2023) update - Corrected MAS with noise_scale and updated train_ms.py, train.py (thanks to [@KdaiP](https://github.com/KdaiP) for testing and pointing out the bug in MAS)
-- (08/08/2023) update 2 - Changed data_utils.py to take in "use_mel_posterior_encoder" flag.
-- (08/08/2023) update 1 - Added "use_noise_scaled_mas" flag in config file. Added sanity checks in notebooks. Everything except adverserial duration predictor is ready to train.
-- (08/072023) update 2 - transformer_flow_type "fft" and "pre_conv" added. [@lexkoro](https://github.com/lexkoro) suggested "fft" transformer flow is better than "pre_conv" transformer flow in his intial experiments.
-- (08/07/2023 update 1 - vits2_vctk_base.json and vits2_ljs_base.json are ready to train; multi-speaker and single-speaker models respectively)
-- (08/06/2023 update - dry run is ready; duration predictor will complete within next week)
-- (08/05/2023 update - everything except the duration predictor is ready to train and we can expect some improvement from VITS1)
-- (08/04/2023 update - initial codebaase is ready; paper is being read)
+## TODOs, features and notes
 
 #### Duration predictor (fig 1a) 
 - [x] Added LSTM discriminator to duration predictor in notebook.
