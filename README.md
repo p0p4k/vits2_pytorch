@@ -21,8 +21,8 @@ Would recommend experts to rename the ckpts to *_0.pth and starting the training
 - [vietnamese samples](https://github.com/p0p4k/vits2_pytorch/pull/10#issuecomment-1682307529) Thanks to [@ductho9799](https://github.com/ductho9799) for sharing!
 
 ## Prerequisites
-1. Python >= 3.6
-2. ~Now supports Pytorch version 2.0~ (08/17/2023) - Tested on Pytorch version 1.13.1 with Google Colab and LambdaLabs cloud.
+1. Python >= 3.10
+2. Tested on Pytorch version 1.13.1 with Google Colab and LambdaLabs cloud.
 3. Clone this repository
 4. Install python requirements. Please refer [requirements.txt](requirements.txt)
     1. You may need to install espeak first: `apt-get install espeak`
