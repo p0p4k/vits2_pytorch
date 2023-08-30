@@ -16,8 +16,9 @@ Would recommend experts to rename the ckpts to *_0.pth and starting the training
 - [x] Check 'Discussion' page for training logs and tensorboard links and other community contributions.
 
 # Sample audio
-- (08/23/2023) - Some samples on non-native EN dataset [discussion page](https://github.com/p0p4k/vits2_pytorch/discussions/18). Thanks to [@athenasaurav](https://github.com/athenasaurav) for using his private GPU resources and dataset!
-- (08/20/2023) - Added sample audio @104k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
+- Russian trained model samples [#32](https://github.com/p0p4k/vits2_pytorch/discussions/32). Thanks to [@shigabeev](https://github.com/shigabeev) for sharing the samples.
+- Some samples on non-native EN dataset [discussion page](https://github.com/p0p4k/vits2_pytorch/discussions/18). Thanks to [@athenasaurav](https://github.com/athenasaurav) for using his private GPU resources and dataset!
+- Added sample audio @104k steps. [ljspeech-nosdp](resources/test.wav) ; [tensorboard](https://github.com/p0p4k/vits2_pytorch/discussions/12)
 - [vietnamese samples](https://github.com/p0p4k/vits2_pytorch/pull/10#issuecomment-1682307529) Thanks to [@ductho9799](https://github.com/ductho9799) for sharing!
 
 ## Prerequisites
