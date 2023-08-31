@@ -421,7 +421,6 @@ class MonoTransformerFlowLayer(nn.Module): #vits2
     if self.residual_connection:
       if not reverse:
         x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
-        x0_ = x0 * x_mask
         x0_ = self.pre_transformer(x0, x_mask) #vits2
         stats = self.post(x0_) * x_mask
         if not self.mean_only:
