@@ -11,3 +11,4 @@ Unidecode==1.3.6
 tensorboard==2.14.0
 onnx==1.14.1
 onnxruntime==1.15.1
+gradio
