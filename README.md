@@ -100,6 +100,10 @@ python train.py -c configs/vits2_ljs_base.json -m ljs_base # with sdp;
 
 # VCTK
 python train_ms.py -c configs/vits2_vctk_base.json -m vctk_base
+
+# for onnx export of trained models
+python export_onnx.py --model-path="G_64000.pth" --config-path="config.json" --output="vits2.onnx"
+python infer_onnx.py --model="vits2.onnx" --config-path="config.json" --output-wav-path="output.wav" --text="hello world, how are you?"
 ```
 
 ## TODOs, features and notes
@@ -132,12 +136,14 @@ MonoTransformerFlowLayer)
 - [x] Added vits2 flags to train.py (single-speaer model)
 - [x] Added vits2 flags to train_ms.py (multi-speaker model)
 #### ONNX export
-- [ ] Add ONNX export support. [TODO]
+- [x] Add ONNX export support. 
 #### Gradio Demo
-- [ ] Add Gradio demo support. [TODO]
+- [x] Add Gradio demo support.
   
 ## Special mentions
 - [@erogol](https://github.com/erogol) for quick feedback and guidance. (Please check his awesome [CoquiTTS](https://github.com/coqui-ai/TTS) repo).
 - [@lexkoro](https://github.com/lexkoro) for discussions and help with the prototype training.
 - [@manmay-nakhashi](https://github.com/manmay-nakhashi) for discussions and help with the code.
 - [@athenasaurav](https://github.com/athenasaurav) for offering GPU support for training.
+- [@w11wo](https://github.com/w11wo) for ONNX support.
+- [@Subarasheese](https://github.com/Subarasheese) for Gradio UI.
