@@ -35,7 +35,12 @@ def cleaned_text_to_sequence(cleaned_text):
     Returns:
       List of integers corresponding to the symbols in the text
     """
-    sequence = [_symbol_to_id[symbol] for symbol in cleaned_text]
+    for symbol in clean_text:
+        if symbol in _symbol_to_id.keys():
+            symbol_id = _symbol_to_id[symbol]
+            sequence += [symbol_id]
+        else:
+            continue
     return sequence
 
 
