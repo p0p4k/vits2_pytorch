@@ -20,8 +20,11 @@ def text_to_sequence(text, cleaner_names):
 
     clean_text = _clean_text(text, cleaner_names)
     for symbol in clean_text:
-        symbol_id = _symbol_to_id[symbol]
-        sequence += [symbol_id]
+        if symbol in _symbol_to_id.keys():
+            symbol_id = _symbol_to_id[symbol]
+            sequence += [symbol_id]
+        else:
+            continue
     return sequence
 
 
