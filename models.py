@@ -1,17 +1,17 @@
 import copy
 import math
+
 import torch
 from torch import nn
+from torch.nn import AvgPool1d, Conv1d, Conv2d, ConvTranspose1d
 from torch.nn import functional as F
+from torch.nn.utils import remove_weight_norm, spectral_norm, weight_norm
 
+import attentions
 import commons
 import modules
-import attentions
 import monotonic_align
-
-from torch.nn import Conv1d, ConvTranspose1d, AvgPool1d, Conv2d
-from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
-from commons import init_weights, get_padding
+from commons import get_padding, init_weights
 
 AVAILABLE_FLOW_TYPES = [
     "pre_conv",
@@ -22,8 +22,8 @@ AVAILABLE_FLOW_TYPES = [
 ]
 
 AVAILABLE_DURATION_DISCRIMINATOR_TYPES = {
-    "dur_disc_1": "DurationDiscriminator", 
-    "dur_disc_2": "DurationDiscriminator2", 
+    "dur_disc_1": "DurationDiscriminator",
+    "dur_disc_2": "DurationDiscriminator2",
 }
 
 
@@ -256,8 +256,8 @@ class DurationDiscriminator(nn.Module):  # vits2
             output_probs.append(output_prob)
 
         return output_probs
-    
-    
+
+
 class DurationDiscriminator2(nn.Module):  # vits2
     # TODO : not using "spk conditioning" for now according to the paper.
     # Can be a better discriminator if we use it.
@@ -379,8 +379,8 @@ class TextEncoder(nn.Module):
 
         m, logs = torch.split(stats, self.out_channels, dim=1)
         return x, m, logs, x_mask
-    
-    
+
+
 class ResidualCouplingTransformersLayer2(nn.Module):  # vits2
     def __init__(
         self,

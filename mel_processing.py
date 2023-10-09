@@ -5,19 +5,20 @@ warnings.filterwarnings(action="ignore")
 
 import math
 import os
-from packaging import version
 import random
-import torch
-from torch import nn
-import torch.nn.functional as F
-import torch.utils.data
-import numpy as np
+
 import librosa
 import librosa.util as librosa_util
-from librosa.util import normalize, pad_center, tiny
-from scipy.signal import get_window
-from scipy.io.wavfile import read
+import numpy as np
+import torch
+import torch.nn.functional as F
+import torch.utils.data
 from librosa.filters import mel as librosa_mel_fn
+from librosa.util import normalize, pad_center, tiny
+from packaging import version
+from scipy.io.wavfile import read
+from scipy.signal import get_window
+from torch import nn
 
 MAX_WAV_VALUE = 32768.0
 

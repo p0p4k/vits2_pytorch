@@ -1,14 +1,16 @@
-import time
 import os
 import random
+import time
+
 import numpy as np
 import torch
 import torch.utils.data
 
 import commons
-from mel_processing import spectrogram_torch, mel_spectrogram_torch, spec_to_mel_torch
-from utils import load_wav_to_torch, load_filepaths_and_text
-from text import text_to_sequence, cleaned_text_to_sequence
+from mel_processing import (mel_spectrogram_torch, spec_to_mel_torch,
+                            spectrogram_torch)
+from text import cleaned_text_to_sequence, text_to_sequence
+from utils import load_filepaths_and_text, load_wav_to_torch
 
 
 class TextAudioLoader(torch.utils.data.Dataset):
@@ -260,7 +262,9 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
                 lengths.append(length)
         self.audiopaths_sid_text = audiopaths_sid_text_new
         self.lengths = lengths
-        print(len(self.lengths)) # if we use large corpus dataset, we can check how much time it takes.
+        print(
+            len(self.lengths)
+        )  # if we use large corpus dataset, we can check how much time it takes.
 
     def get_audio_text_speaker_pair(self, audiopath_sid_text):
         # separate filename, speaker_id and text
