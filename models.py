@@ -525,7 +525,7 @@ class MonoTransformerFlowLayer(nn.Module):  # vits2
                 logs = torch.zeros_like(m)
             if not reverse:
                 x1 = m + x1 * torch.exp(logs) * x_mask
-                x_ = torch.cat([x0, x1], 1)
+                x = torch.cat([x0, x1], 1)
                 logdet = torch.sum(logs, [1, 2])
                 return x, logdet
             else:
