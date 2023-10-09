@@ -17,6 +17,7 @@ from torch.cuda.amp import autocast, GradScaler
 import tqdm
 
 import commons
+import models
 import utils
 from data_utils import (
     TextAudioSpeakerLoader,
@@ -27,7 +28,8 @@ from models import (
     SynthesizerTrn,
     MultiPeriodDiscriminator,
     DurationDiscriminator,
-    AVAILABLE_FLOW_TYPES,
+    AVAILABLE_FLOW_TYPES, 
+    AVAILABLE_DURATION_DISCRIMINATOR_TYPES, 
 )
 from losses import generator_loss, discriminator_loss, feature_loss, kl_loss
 from mel_processing import mel_spectrogram_torch, spec_to_mel_torch
@@ -162,7 +164,14 @@ def run(rank, n_gpus, hps):
     ):
         print("Using duration discriminator for VITS2")
         use_duration_discriminator = True
-        net_dur_disc = DurationDiscriminator(
+        
+        # comment - choihkk
+        # add duration discriminator type here
+        # I think it would be a good idea to come up with a method to input this part accurately, like a hydra
+        duration_discriminator_type = getattr(hps.model, "duration_discriminator_type", "dur_disc_1")
+        assert duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys(), f"duration_discriminator_type must be one of {list(AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys())}"
+        DurationDiscriminator = AVAILABLE_DURATION_DISCRIMINATOR_TYPES[duration_discriminator_type]
+        net_dur_disc = getattr(models, DurationDiscriminator)(
             hps.model.hidden_channels,
             hps.model.hidden_channels,
             3,
@@ -205,11 +214,16 @@ def run(rank, n_gpus, hps):
         )
     else:
         optim_dur_disc = None
-
-    net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=True)
-    net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=True)
+    
+    # comment - choihkk
+    # if we comment out unused parameter like DurationDiscriminator's self.pre_out_norm1,2 self.norm_1,2
+    # and ResidualCouplingTransformersLayer's self.post_transformer
+    # we don't have to set find_unused_parameters=True
+    # but I will not proceed with commenting out for compatibility with the latest work for others
+    net_g = DDP(net_g, device_ids=[rank])#, find_unused_parameters=True)
+    net_d = DDP(net_d, device_ids=[rank])#, find_unused_parameters=True)
     if net_dur_disc is not None:
-        net_dur_disc = DDP(net_dur_disc, device_ids=[rank], find_unused_parameters=True)
+        net_dur_disc = DDP(net_dur_disc, device_ids=[rank])#, find_unused_parameters=True)
 
     try:
         _, _, _, epoch_str = utils.load_checkpoint(
@@ -343,8 +357,12 @@ def train_and_evaluate(
             ):
                 mel = spec
             else:
+                # comment - choihkk
+                # for numerical stable when using fp16 and torch>=2.0.0, 
+                # spec.float() could be help in the training stage
+                # https://github.com/jaywalnut310/vits/issues/15
                 mel = spec_to_mel_torch(
-                    spec,
+                    spec.float(), 
                     hps.data.filter_length,
                     hps.data.n_mel_channels,
                     hps.data.sampling_rate,

@@ -1,3 +1,8 @@
+import warnings
+
+# warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.filterwarnings(action="ignore")
+
 import math
 import os
 from packaging import version

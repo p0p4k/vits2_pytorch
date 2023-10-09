@@ -233,6 +233,7 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         self.add_blank = hparams.add_blank
         self.min_text_len = getattr(hparams, "min_text_len", 1)
         self.max_text_len = getattr(hparams, "max_text_len", 190)
+        self.min_audio_len = getattr(hparams, "min_audio_len", 8192)
 
         random.seed(1234)
         random.shuffle(self.audiopaths_sid_text)
@@ -249,11 +250,17 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         audiopaths_sid_text_new = []
         lengths = []
         for audiopath, sid, text in self.audiopaths_sid_text:
+            if not os.path.isfile(audiopath):
+                continue
             if self.min_text_len <= len(text) and len(text) <= self.max_text_len:
                 audiopaths_sid_text_new.append([audiopath, sid, text])
-                lengths.append(os.path.getsize(audiopath) // (2 * self.hop_length))
+                length = os.path.getsize(audiopath) // (2 * self.hop_length)
+                if length < self.min_audio_len // self.hop_length:
+                    continue
+                lengths.append(length)
         self.audiopaths_sid_text = audiopaths_sid_text_new
         self.lengths = lengths
+        print(len(self.lengths)) # if we use large corpus dataset, we can check how much time it takes.
 
     def get_audio_text_speaker_pair(self, audiopath_sid_text):
         # separate filename, speaker_id and text
