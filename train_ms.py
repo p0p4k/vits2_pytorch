@@ -218,12 +218,11 @@ def run(rank, n_gpus, hps):
     # and ResidualCouplingTransformersLayer's self.post_transformer
     # we don't have to set find_unused_parameters=True
     # but I will not proceed with commenting out for compatibility with the latest work for others
-    net_g = DDP(net_g, device_ids=[rank])  # , find_unused_parameters=True)
-    net_d = DDP(net_d, device_ids=[rank])  # , find_unused_parameters=True)
+    net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=True)
+    net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=True)
     if net_dur_disc is not None:
         net_dur_disc = DDP(
-            net_dur_disc, device_ids=[rank]
-        )  # , find_unused_parameters=True)
+            net_dur_disc, device_ids=[rank], find_unused_parameters=True)
 
     try:
         _, _, _, epoch_str = utils.load_checkpoint(
