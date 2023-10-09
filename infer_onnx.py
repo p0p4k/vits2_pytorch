@@ -1,13 +1,13 @@
-import torch
-import onnxruntime
-import numpy as np
 import argparse
+
+import numpy as np
+import onnxruntime
+import torch
+from scipy.io.wavfile import write
 
 import commons
 import utils
 from text import text_to_sequence
-
-from scipy.io.wavfile import write
 
 
 def get_text(text, hps):
@@ -28,10 +28,11 @@ def main() -> None:
         "--output-wav-path", required=True, help="Path to write WAV file"
     )
     parser.add_argument("--text", required=True, type=str, help="Text to synthesize")
+    parser.add_argument("--sid", required=False, type=int, help="Speaker ID to synthesize")
     args = parser.parse_args()
 
     sess_options = onnxruntime.SessionOptions()
-    model = onnxruntime.InferenceSession(str(args.model), sess_options=sess_options)
+    model = onnxruntime.InferenceSession(str(args.model), sess_options=sess_options, providers=["CPUExecutionProvider"])
 
     hps = utils.get_hparams_from_file(args.config_path)
 
@@ -39,7 +40,7 @@ def main() -> None:
     text = np.expand_dims(np.array(phoneme_ids, dtype=np.int64), 0)
     text_lengths = np.array([text.shape[1]], dtype=np.int64)
     scales = np.array([0.667, 1.0, 0.8], dtype=np.float32)
-    sid = None
+    sid = np.array([int(args.sid)]) if args.sid is not None else None
 
     audio = model.run(
         None,

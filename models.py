@@ -1,24 +1,30 @@
 import copy
 import math
+
 import torch
 from torch import nn
+from torch.nn import AvgPool1d, Conv1d, Conv2d, ConvTranspose1d
 from torch.nn import functional as F
+from torch.nn.utils import remove_weight_norm, spectral_norm, weight_norm
 
+import attentions
 import commons
 import modules
-import attentions
 import monotonic_align
-
-from torch.nn import Conv1d, ConvTranspose1d, AvgPool1d, Conv2d
-from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
-from commons import init_weights, get_padding
+from commons import get_padding, init_weights
 
 AVAILABLE_FLOW_TYPES = [
     "pre_conv",
+    "pre_conv2",
     "fft",
     "mono_layer_inter_residual",
     "mono_layer_post_residual",
 ]
+
+AVAILABLE_DURATION_DISCRIMINATOR_TYPES = {
+    "dur_disc_1": "DurationDiscriminator",
+    "dur_disc_2": "DurationDiscriminator2",
+}
 
 
 class StochasticDurationPredictor(nn.Module):
@@ -252,6 +258,78 @@ class DurationDiscriminator(nn.Module):  # vits2
         return output_probs
 
 
+class DurationDiscriminator2(nn.Module):  # vits2
+    # TODO : not using "spk conditioning" for now according to the paper.
+    # Can be a better discriminator if we use it.
+    def __init__(
+        self, in_channels, filter_channels, kernel_size, p_dropout, gin_channels=0
+    ):
+        super().__init__()
+
+        self.in_channels = in_channels
+        self.filter_channels = filter_channels
+        self.kernel_size = kernel_size
+        self.p_dropout = p_dropout
+        self.gin_channels = gin_channels
+
+        self.conv_1 = nn.Conv1d(
+            in_channels, filter_channels, kernel_size, padding=kernel_size // 2
+        )
+        self.norm_1 = modules.LayerNorm(filter_channels)
+        self.conv_2 = nn.Conv1d(
+            filter_channels, filter_channels, kernel_size, padding=kernel_size // 2
+        )
+        self.norm_2 = modules.LayerNorm(filter_channels)
+        self.dur_proj = nn.Conv1d(1, filter_channels, 1)
+
+        self.pre_out_conv_1 = nn.Conv1d(
+            2 * filter_channels, filter_channels, kernel_size, padding=kernel_size // 2
+        )
+        self.pre_out_norm_1 = modules.LayerNorm(filter_channels)
+        self.pre_out_conv_2 = nn.Conv1d(
+            filter_channels, filter_channels, kernel_size, padding=kernel_size // 2
+        )
+        self.pre_out_norm_2 = modules.LayerNorm(filter_channels)
+
+        # if gin_channels != 0:
+        #   self.cond = nn.Conv1d(gin_channels, in_channels, 1)
+
+        self.output_layer = nn.Sequential(nn.Linear(filter_channels, 1), nn.Sigmoid())
+
+    def forward_probability(self, x, x_mask, dur, g=None):
+        dur = self.dur_proj(dur)
+        x = torch.cat([x, dur], dim=1)
+        x = self.pre_out_conv_1(x * x_mask)
+        x = torch.relu(x)
+        x = self.pre_out_norm_1(x)
+        x = self.pre_out_conv_2(x * x_mask)
+        x = torch.relu(x)
+        x = self.pre_out_norm_2(x)
+        x = x * x_mask
+        x = x.transpose(1, 2)
+        output_prob = self.output_layer(x)
+        return output_prob
+
+    def forward(self, x, x_mask, dur_r, dur_hat, g=None):
+        x = torch.detach(x)
+        # if g is not None:
+        #   g = torch.detach(g)
+        #   x = x + self.cond(g)
+        x = self.conv_1(x * x_mask)
+        x = torch.relu(x)
+        x = self.norm_1(x)
+        x = self.conv_2(x * x_mask)
+        x = torch.relu(x)
+        x = self.norm_2(x)
+
+        output_probs = []
+        for dur in [dur_r, dur_hat]:
+            output_prob = self.forward_probability(x, x_mask, dur, g)
+            output_probs.append([output_prob])
+
+        return output_probs
+
+
 class TextEncoder(nn.Module):
     def __init__(
         self,
@@ -301,6 +379,73 @@ class TextEncoder(nn.Module):
 
         m, logs = torch.split(stats, self.out_channels, dim=1)
         return x, m, logs, x_mask
+
+
+class ResidualCouplingTransformersLayer2(nn.Module):  # vits2
+    def __init__(
+        self,
+        channels,
+        hidden_channels,
+        kernel_size,
+        dilation_rate,
+        n_layers,
+        p_dropout=0,
+        gin_channels=0,
+        mean_only=False,
+    ):
+        assert channels % 2 == 0, "channels should be divisible by 2"
+        super().__init__()
+        self.channels = channels
+        self.hidden_channels = hidden_channels
+        self.kernel_size = kernel_size
+        self.dilation_rate = dilation_rate
+        self.n_layers = n_layers
+        self.half_channels = channels // 2
+        self.mean_only = mean_only
+
+        self.pre = nn.Conv1d(self.half_channels, hidden_channels, 1)
+        self.pre_transformer = attentions.Encoder(
+            hidden_channels,
+            hidden_channels,
+            n_heads=2,
+            n_layers=1,
+            kernel_size=kernel_size,
+            p_dropout=p_dropout,
+            # window_size=None,
+        )
+        self.enc = modules.WN(
+            hidden_channels,
+            kernel_size,
+            dilation_rate,
+            n_layers,
+            p_dropout=p_dropout,
+            gin_channels=gin_channels,
+        )
+
+        self.post = nn.Conv1d(hidden_channels, self.half_channels * (2 - mean_only), 1)
+        self.post.weight.data.zero_()
+        self.post.bias.data.zero_()
+
+    def forward(self, x, x_mask, g=None, reverse=False):
+        x0, x1 = torch.split(x, [self.half_channels] * 2, 1)
+        h = self.pre(x0) * x_mask
+        h = h + self.pre_transformer(h * x_mask, x_mask)  # vits2 residual connection
+        h = self.enc(h, x_mask, g=g)
+        stats = self.post(h) * x_mask
+        if not self.mean_only:
+            m, logs = torch.split(stats, [self.half_channels] * 2, 1)
+        else:
+            m = stats
+            logs = torch.zeros_like(m)
+        if not reverse:
+            x1 = m + x1 * torch.exp(logs) * x_mask
+            x = torch.cat([x0, x1], 1)
+            logdet = torch.sum(logs, [1, 2])
+            return x, logdet
+        else:
+            x1 = (x1 - m) * torch.exp(-logs) * x_mask
+            x = torch.cat([x0, x1], 1)
+            return x
 
 
 class ResidualCouplingTransformersLayer(nn.Module):  # vits2
@@ -562,6 +707,20 @@ class ResidualCouplingTransformersBlock(nn.Module):  # vits2
                 for i in range(n_flows):
                     self.flows.append(
                         ResidualCouplingTransformersLayer(
+                            channels,
+                            hidden_channels,
+                            kernel_size,
+                            dilation_rate,
+                            n_layers,
+                            gin_channels=gin_channels,
+                            mean_only=True,
+                        )
+                    )
+                    self.flows.append(modules.Flip())
+            elif transformer_flow_type == "pre_conv2":
+                for i in range(n_flows):
+                    self.flows.append(
+                        ResidualCouplingTransformersLayer2(
                             channels,
                             hidden_channels,
                             kernel_size,
@@ -1190,13 +1349,15 @@ class SynthesizerTrn(nn.Module):
         o = self.dec((z * y_mask)[:, :, :max_len], g=g)
         return o, attn, y_mask, (z, z_p, m_p, logs_p)
 
-    ## currently vits-2 is not capable of voice conversion
-    # def voice_conversion(self, y, y_lengths, sid_src, sid_tgt):
-    #   assert self.n_speakers > 0, "n_speakers have to be larger than 0."
-    #   g_src = self.emb_g(sid_src).unsqueeze(-1)
-    #   g_tgt = self.emb_g(sid_tgt).unsqueeze(-1)
-    #   z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g_src)
-    #   z_p = self.flow(z, y_mask, g=g_src)
-    #   z_hat = self.flow(z_p, y_mask, g=g_tgt, reverse=True)
-    #   o_hat = self.dec(z_hat * y_mask, g=g_tgt)
-    #   return o_hat, y_mask, (z, z_p, z_hat)
+    # currently vits-2 is not capable of voice conversion
+    ## comment - choihkk
+    ## Assuming the use of the ResidualCouplingTransformersLayer2 module, it seems that voice conversion is possible 
+    def voice_conversion(self, y, y_lengths, sid_src, sid_tgt):
+        assert self.n_speakers > 0, "n_speakers have to be larger than 0."
+        g_src = self.emb_g(sid_src).unsqueeze(-1)
+        g_tgt = self.emb_g(sid_tgt).unsqueeze(-1)
+        z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g_src)
+        z_p = self.flow(z, y_mask, g=g_src)
+        z_hat = self.flow(z_p, y_mask, g=g_tgt, reverse=True)
+        o_hat = self.dec(z_hat * y_mask, g=g_tgt)
+        return o_hat, y_mask, (z, z_p, z_hat)
