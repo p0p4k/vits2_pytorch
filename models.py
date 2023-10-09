@@ -1349,13 +1349,15 @@ class SynthesizerTrn(nn.Module):
         o = self.dec((z * y_mask)[:, :, :max_len], g=g)
         return o, attn, y_mask, (z, z_p, m_p, logs_p)
 
-    ## currently vits-2 is not capable of voice conversion
-    # def voice_conversion(self, y, y_lengths, sid_src, sid_tgt):
-    #   assert self.n_speakers > 0, "n_speakers have to be larger than 0."
-    #   g_src = self.emb_g(sid_src).unsqueeze(-1)
-    #   g_tgt = self.emb_g(sid_tgt).unsqueeze(-1)
-    #   z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g_src)
-    #   z_p = self.flow(z, y_mask, g=g_src)
-    #   z_hat = self.flow(z_p, y_mask, g=g_tgt, reverse=True)
-    #   o_hat = self.dec(z_hat * y_mask, g=g_tgt)
-    #   return o_hat, y_mask, (z, z_p, z_hat)
+    # currently vits-2 is not capable of voice conversion
+    ## comment - choihkk
+    ## Assuming the use of the ResidualCouplingTransformersLayer2 module, it seems that voice conversion is possible 
+    def voice_conversion(self, y, y_lengths, sid_src, sid_tgt):
+        assert self.n_speakers > 0, "n_speakers have to be larger than 0."
+        g_src = self.emb_g(sid_src).unsqueeze(-1)
+        g_tgt = self.emb_g(sid_tgt).unsqueeze(-1)
+        z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g_src)
+        z_p = self.flow(z, y_mask, g=g_src)
+        z_hat = self.flow(z_p, y_mask, g=g_tgt, reverse=True)
+        o_hat = self.dec(z_hat * y_mask, g=g_tgt)
+        return o_hat, y_mask, (z, z_p, z_hat)
