@@ -154,7 +154,7 @@ def run(rank, n_gpus, hps):
         "use_duration_discriminator" in hps.model.keys()
         and hps.model.use_duration_discriminator == True
     ):
-        print("Using duration discriminator for VITS2")
+        # print("Using duration discriminator for VITS2")
         use_duration_discriminator = True
 
         # comment - choihkk
@@ -163,12 +163,14 @@ def run(rank, n_gpus, hps):
         duration_discriminator_type = getattr(
             hps.model, "duration_discriminator_type", "dur_disc_1"
         )
+        print(f"Using duration_discriminator {duration_discriminator_type} for VITS2")
         assert (
             duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys()
         ), f"duration_discriminator_type must be one of {list(AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys())}"
         DurationDiscriminator = AVAILABLE_DURATION_DISCRIMINATOR_TYPES[
             duration_discriminator_type
         ]
+        
         net_dur_disc = getattr(models, DurationDiscriminator)(
             hps.model.hidden_channels,
             hps.model.hidden_channels,
