@@ -84,12 +84,30 @@ def summarize(
         writer.add_audio(k, v, global_step, audio_sampling_rate)
 
 
-def latest_checkpoint_path(dir_path, regex="G_*.pth"):
+def scan_checkpoint(dir_path, regex):
     f_list = glob.glob(os.path.join(dir_path, regex))
     f_list.sort(key=lambda f: int("".join(filter(str.isdigit, f))))
+    if len(f_list) == 0:
+        return None
+    return f_list
+
+
+def latest_checkpoint_path(dir_path, regex="G_*.pth"):
+    f_list = scan_checkpoint(dir_path, regex)
+    if not f_list:
+        return None
     x = f_list[-1]
     print(x)
     return x
+
+
+def remove_old_checkpoints(cp_dir, prefixes=['G_*.pth', 'D_*.pth', 'DUR_*.pth']):
+    for prefix in prefixes:
+        sorted_ckpts = scan_checkpoint(cp_dir, prefix)
+        if sorted_ckpts and len(sorted_ckpts) > 3:
+            for ckpt_path in sorted_ckpts[:-3]:
+                os.remove(ckpt_path)
+                print("removed {}".format(ckpt_path))
 
 
 def plot_spectrogram_to_numpy(spectrogram):
