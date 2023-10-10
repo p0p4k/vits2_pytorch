@@ -24,6 +24,7 @@ from models import (
     MultiPeriodDiscriminator,
     DurationDiscriminator,
     AVAILABLE_FLOW_TYPES,
+    AVAILABLE_DURATION_DISCRIMINATOR_TYPES
 )
 from losses import generator_loss, discriminator_loss, feature_loss, kl_loss
 from mel_processing import mel_spectrogram_torch, spec_to_mel_torch
@@ -159,8 +160,13 @@ def run(rank, n_gpus, hps):
         "use_duration_discriminator" in hps.model.keys()
         and hps.model.use_duration_discriminator == True
     ):
-        print("Using duration discriminator for VITS2")
+        # print("Using duration discriminator for VITS2")
         use_duration_discriminator = True
+        duration_discriminator_type = hps.model.duration_discriminator_type
+        print(f"Using duration_discriminator {duration_discriminator_type} for VITS2")
+        assert duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys(), f"duration_discriminator_type must be one of {list(AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys())}"
+        DurationDiscriminator = AVAILABLE_DURATION_DISCRIMINATOR_TYPES[duration_discriminator_type]
+        
         net_dur_disc = DurationDiscriminator(
             hps.model.hidden_channels,
             hps.model.hidden_channels,
@@ -335,7 +341,7 @@ def train_and_evaluate(
                 mel = spec
             else:
                 mel = spec_to_mel_torch(
-                    spec,
+                    spec.float(),
                     hps.data.filter_length,
                     hps.data.n_mel_channels,
                     hps.data.sampling_rate,
