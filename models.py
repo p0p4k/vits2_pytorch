@@ -21,10 +21,10 @@ AVAILABLE_FLOW_TYPES = [
     "mono_layer_post_residual",
 ]
 
-AVAILABLE_DURATION_DISCRIMINATOR_TYPES = {
-    "dur_disc_1": "DurationDiscriminator",
-    "dur_disc_2": "DurationDiscriminator2",
-}
+AVAILABLE_DURATION_DISCRIMINATOR_TYPES = [
+    "dur_disc_1"
+    "dur_disc_2"
+]
 
 
 class StochasticDurationPredictor(nn.Module):
@@ -181,7 +181,7 @@ class DurationPredictor(nn.Module):
         return x * x_mask
 
 
-class DurationDiscriminator(nn.Module):  # vits2
+class DurationDiscriminatorV1(nn.Module):  # vits2
     # TODO : not using "spk conditioning" for now according to the paper.
     # Can be a better discriminator if we use it.
     def __init__(
@@ -258,7 +258,7 @@ class DurationDiscriminator(nn.Module):  # vits2
         return output_probs
 
 
-class DurationDiscriminator2(nn.Module):  # vits2
+class DurationDiscriminatorV2(nn.Module):  # vits2
     # TODO : not using "spk conditioning" for now according to the paper.
     # Can be a better discriminator if we use it.
     def __init__(
