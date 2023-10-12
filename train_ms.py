@@ -24,7 +24,8 @@ from data_utils import (DistributedBucketSampler, TextAudioSpeakerCollate,
 from losses import discriminator_loss, feature_loss, generator_loss, kl_loss
 from mel_processing import mel_spectrogram_torch, spec_to_mel_torch
 from models import (AVAILABLE_DURATION_DISCRIMINATOR_TYPES,
-                    AVAILABLE_FLOW_TYPES, DurationDiscriminator,
+                    AVAILABLE_FLOW_TYPES, 
+                    DurationDiscriminatorV1, DurationDiscriminatorV2,
                     MultiPeriodDiscriminator, SynthesizerTrn)
 from text.symbols import symbols
 
@@ -165,19 +166,25 @@ def run(rank, n_gpus, hps):
         )
         print(f"Using duration_discriminator {duration_discriminator_type} for VITS2")
         assert (
-            duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys()
-        ), f"duration_discriminator_type must be one of {list(AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys())}"
-        DurationDiscriminator = AVAILABLE_DURATION_DISCRIMINATOR_TYPES[
-            duration_discriminator_type
-        ]
-        
-        net_dur_disc = getattr(models, DurationDiscriminator)(
-            hps.model.hidden_channels,
-            hps.model.hidden_channels,
-            3,
-            0.1,
-            gin_channels=hps.model.gin_channels if hps.data.n_speakers != 0 else 0,
-        ).cuda(rank)
+            duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES
+        ), f"duration_discriminator_type must be one of {AVAILABLE_DURATION_DISCRIMINATOR_TYPES}"
+        duration_discriminator_type = AVAILABLE_DURATION_DISCRIMINATOR_TYPES
+        if duration_discriminator_type == "dur_disc_1":
+            net_dur_disc = DurationDiscriminatorV1(
+                hps.model.hidden_channels,
+                hps.model.hidden_channels,
+                3,
+                0.1,
+                gin_channels=hps.model.gin_channels if hps.data.n_speakers != 0 else 0,
+            ).cuda(rank)
+        elif duration_discriminator_type == "dur_disc_2":
+            net_dur_disc = DurationDiscriminatorV2(
+                hps.model.hidden_channels,
+                hps.model.hidden_channels,
+                3,
+                0.1,
+                gin_channels=hps.model.gin_channels if hps.data.n_speakers != 0 else 0,
+            ).cuda(rank) 
     else:
         print("NOT using any duration discriminator like VITS1")
         net_dur_disc = None
