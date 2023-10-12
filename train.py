@@ -22,7 +22,8 @@ from data_utils import TextAudioLoader, TextAudioCollate, DistributedBucketSampl
 from models import (
     SynthesizerTrn,
     MultiPeriodDiscriminator,
-    DurationDiscriminator,
+    DurationDiscriminatorV1,
+    DurationDiscriminatorV2,
     AVAILABLE_FLOW_TYPES,
     AVAILABLE_DURATION_DISCRIMINATOR_TYPES
 )
@@ -164,16 +165,23 @@ def run(rank, n_gpus, hps):
         use_duration_discriminator = True
         duration_discriminator_type = hps.model.duration_discriminator_type
         print(f"Using duration_discriminator {duration_discriminator_type} for VITS2")
-        assert duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys(), f"duration_discriminator_type must be one of {list(AVAILABLE_DURATION_DISCRIMINATOR_TYPES.keys())}"
-        DurationDiscriminator = AVAILABLE_DURATION_DISCRIMINATOR_TYPES[duration_discriminator_type]
-        
-        net_dur_disc = DurationDiscriminator(
-            hps.model.hidden_channels,
-            hps.model.hidden_channels,
-            3,
-            0.1,
-            gin_channels=hps.model.gin_channels if hps.data.n_speakers != 0 else 0,
-        ).cuda(rank)
+        assert duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES, f"duration_discriminator_type must be one of {AVAILABLE_DURATION_DISCRIMINATOR_TYPES}"
+        if duration_discriminator_type == "dur_disc_1":
+            net_dur_disc = DurationDiscriminatorV1(
+                hps.model.hidden_channels,
+                hps.model.hidden_channels,
+                3,
+                0.1,
+                gin_channels=hps.model.gin_channels if hps.data.n_speakers != 0 else 0,
+            ).cuda(rank)
+        elif duration_discriminator_type == "dur_disc_2":
+            net_dur_disc = DurationDiscriminatorV2(
+                hps.model.hidden_channels,
+                hps.model.hidden_channels,
+                3,
+                0.1,
+                gin_channels=hps.model.gin_channels if hps.data.n_speakers != 0 else 0,
+            ).cuda(rank) 
     else:
         print("NOT using any duration discriminator like VITS1")
         net_dur_disc = None
