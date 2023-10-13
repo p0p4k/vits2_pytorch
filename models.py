@@ -22,8 +22,8 @@ AVAILABLE_FLOW_TYPES = [
 ]
 
 AVAILABLE_DURATION_DISCRIMINATOR_TYPES = [
-    "dur_disc_1"
-    "dur_disc_2"
+    "dur_disc_1",
+    "dur_disc_2",
 ]
 
 
