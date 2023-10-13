@@ -53,6 +53,7 @@ def main():
 
 
 def run(rank, n_gpus, hps):
+    net_dur_disc = None
     global global_step
     if rank == 0:
         logger = utils.get_logger(hps.model_dir)
