@@ -12,6 +12,7 @@ import commons
 import modules
 import monotonic_align
 from commons import get_padding, init_weights
+from .aligner import Aligner, ForwardSumLoss, BinLoss
 
 AVAILABLE_FLOW_TYPES = [
     "pre_conv",
@@ -1231,6 +1232,16 @@ class SynthesizerTrn(nn.Module):
             self.dp = DurationPredictor(
                 hidden_channels, 256, 3, 0.5, gin_channels=gin_channels
             )
+        
+        self.aligner = Aligner(
+            dim_in=80,
+            dim_hidden=self.enc_gin_channels,
+            attn_channels=self.enc_gin_channels,
+        )
+        
+        self.aligner_loss = ForwardSumLoss()
+        self.bin_loss = BinLoss()
+        self.aligner_bin_loss_weight = 0.0
 
         if n_speakers > 1:
             self.emb_g = nn.Embedding(n_speakers, gin_channels)
@@ -1245,37 +1256,46 @@ class SynthesizerTrn(nn.Module):
         z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g)
         z_p = self.flow(z, y_mask, g=g)
 
-        with torch.no_grad():
-            # negative cross-entropy
-            s_p_sq_r = torch.exp(-2 * logs_p)  # [b, d, t]
-            neg_cent1 = torch.sum(
-                -0.5 * math.log(2 * math.pi) - logs_p, [1], keepdim=True
-            )  # [b, 1, t_s]
-            neg_cent2 = torch.matmul(
-                -0.5 * (z_p**2).transpose(1, 2), s_p_sq_r
-            )  # [b, t_t, d] x [b, d, t_s] = [b, t_t, t_s]
-            neg_cent3 = torch.matmul(
-                z_p.transpose(1, 2), (m_p * s_p_sq_r)
-            )  # [b, t_t, d] x [b, d, t_s] = [b, t_t, t_s]
-            neg_cent4 = torch.sum(
-                -0.5 * (m_p**2) * s_p_sq_r, [1], keepdim=True
-            )  # [b, 1, t_s]
-            neg_cent = neg_cent1 + neg_cent2 + neg_cent3 + neg_cent4
+        # with torch.no_grad():
+        #     # negative cross-entropy
+        #     s_p_sq_r = torch.exp(-2 * logs_p)  # [b, d, t]
+        #     neg_cent1 = torch.sum(
+        #         -0.5 * math.log(2 * math.pi) - logs_p, [1], keepdim=True
+        #     )  # [b, 1, t_s]
+        #     neg_cent2 = torch.matmul(
+        #         -0.5 * (z_p**2).transpose(1, 2), s_p_sq_r
+        #     )  # [b, t_t, d] x [b, d, t_s] = [b, t_t, t_s]
+        #     neg_cent3 = torch.matmul(
+        #         z_p.transpose(1, 2), (m_p * s_p_sq_r)
+        #     )  # [b, t_t, d] x [b, d, t_s] = [b, t_t, t_s]
+        #     neg_cent4 = torch.sum(
+        #         -0.5 * (m_p**2) * s_p_sq_r, [1], keepdim=True
+        #     )  # [b, 1, t_s]
+        #     neg_cent = neg_cent1 + neg_cent2 + neg_cent3 + neg_cent4
 
-            if self.use_noise_scaled_mas:
-                epsilon = (
-                    torch.std(neg_cent)
-                    * torch.randn_like(neg_cent)
-                    * self.current_mas_noise_scale
-                )
-                neg_cent = neg_cent + epsilon
+        #     if self.use_noise_scaled_mas:
+        #         epsilon = (
+        #             torch.std(neg_cent)
+        #             * torch.randn_like(neg_cent)
+        #             * self.current_mas_noise_scale
+        #         )
+        #         neg_cent = neg_cent + epsilon
 
-            attn_mask = torch.unsqueeze(x_mask, 2) * torch.unsqueeze(y_mask, -1)
-            attn = (
-                monotonic_align.maximum_path(neg_cent, attn_mask.squeeze(1))
-                .unsqueeze(1)
-                .detach()
+        #     attn_mask = torch.unsqueeze(x_mask, 2) * torch.unsqueeze(y_mask, -1)
+        #     attn = (
+        #         monotonic_align.maximum_path(neg_cent, attn_mask.squeeze(1))
+        #         .unsqueeze(1)
+        #         .detach()
+        #     )
+
+        aln_hard, aln_soft, aln_log, aln_mask = self.aligner(
+            m_p.transpose(1,2), x_mask, y, y_mask
             )
+        attn = aln_mask.transpose(1,2).unsqueeze(1)
+        align_loss = self.aligner_loss(aln_log, x_lengths, y_lengths)
+        if self.aligner_bin_loss_weight > 0.:
+            align_bin_loss = self.bin_loss(aln_mask, aln_log, x_lengths) * self.aligner_bin_loss_weight
+            align_loss = align_loss + align_bin_loss
 
         w = attn.sum(2)
         if self.use_sdp:
@@ -1307,6 +1327,7 @@ class SynthesizerTrn(nn.Module):
             y_mask,
             (z, z_p, m_p, logs_p, m_q, logs_q),
             (x, logw, logw_),
+            align_loss,
         )
 
     def infer(
