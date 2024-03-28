@@ -169,7 +169,7 @@ def run(rank, n_gpus, hps):
         assert (
             duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES
         ), f"duration_discriminator_type must be one of {AVAILABLE_DURATION_DISCRIMINATOR_TYPES}"
-        duration_discriminator_type = AVAILABLE_DURATION_DISCRIMINATOR_TYPES
+        
         if duration_discriminator_type == "dur_disc_1":
             net_dur_disc = DurationDiscriminatorV1(
                 hps.model.hidden_channels,
